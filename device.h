@@ -36,6 +36,8 @@ void PutBufferToScreen();
 
 void DrawPoint(int x, int y, const Color color);
 
+void DrawLine(double x0, double y0, double x1, double y1,const Color color=Color(255,255,255));
+
 void CleanScreen();
 
 

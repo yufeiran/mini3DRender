@@ -114,3 +114,76 @@ void CleanScreen()
 		}
 	}
 }
+
+
+
+void DrawLine(double x0, double y0, double x1, double y1,const Color color)
+{
+	if (x1 < x0) {
+		double tempX, tempY;
+		tempX = x0;
+		x0 = x1;
+		x1 = tempX;
+		tempY = y0;
+		y0 = y1;
+		y1 = tempY;
+	}
+	if (x1 == x0) {
+		for (int y = min(y0, y1); y <= max(y0, y1); y++) {
+			DrawPoint(x0, y, color);
+		}
+		return;
+	}
+
+	double k = (y1 - y0) / (x1 - x0);
+
+	if (k == 0) {
+		for (int x = x0; x < x1; x++) {
+			DrawPoint(x, y0, color);
+		}
+	}
+
+	if (k < 1&&k>0) {
+		//use x iter
+		double xi = x0, yi = y0;
+		DrawPoint(xi, yi,color);
+		for (int x = x0; x < x1; x++) {
+			xi = xi + 1;
+			yi = yi + k;
+			DrawPoint(xi, yi,color);
+		}
+
+	}
+	else if(k>=1) {
+		//use y iter	
+		double k_ = 1.0 / k;
+		double yi = y0, xi = x0;
+		DrawPoint(xi, yi,color);
+		for (int y = y0; y < y1; y++) {
+			yi = yi + 1;
+			xi = xi + k_;
+			DrawPoint(xi, yi,color);
+		}
+	}
+	else if (k < -1) {
+		//use y iter
+		double k_ = 1.0 / k;
+		double yi = y0,xi = x0;
+		DrawPoint(xi, yi, color);
+		for (int y = y0; y > y1; y--) {
+			yi = yi - 1;
+			xi = xi - k_;
+			DrawPoint(xi, yi, color);
+		}
+	}
+	else if (k < 0 && k >= -1) {
+		// use x iter
+		double xi = x0, yi = y0;
+		DrawPoint(xi, yi, color);
+		for (int x = x0; x < x1; x++) {
+			xi = xi + 1;
+			yi = yi + k;
+			DrawPoint(xi, yi);
+		}
+	}
+}

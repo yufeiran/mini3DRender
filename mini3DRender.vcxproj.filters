@@ -21,6 +21,12 @@
     <ClCompile Include="device.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="model.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
+    <ClCompile Include="unit.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="mini3DRender.h">
@@ -30,6 +36,9 @@
       <Filter>头文件</Filter>
     </ClInclude>
     <ClInclude Include="device.h">
+      <Filter>头文件</Filter>
+    </ClInclude>
+    <ClInclude Include="model.h">
       <Filter>头文件</Filter>
     </ClInclude>
   </ItemGroup>

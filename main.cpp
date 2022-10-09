@@ -1,8 +1,7 @@
 
-#include"device.h"
-
 #include"mini3DRender.h"
 #include<vector>
+
 using namespace std;
 
 bool debugMode = false;
@@ -13,6 +12,9 @@ bool debugMode = false;
 Vec eye(5, 5, 0);
 Vec lookat(0, 5, 0);
 Vec up(0, 1, 0);
+
+Vec Forward = lookat - eye;
+Vec side;
 
 double viewAng = 45;
 double aspect = 4.0 / 3.0;
@@ -28,14 +30,19 @@ double height = 600;
 double Zmin = 0;
 double Zmax = 1;
 
+Model* model;
 vector<Vec>ansList;
+vector<pair<int, int>>lineList;
 
 
 double rotateXAng = 0;
-double rotateYAng = 45;
+double rotateYAng = 0;
 double rotateZAng = 0;
 
-Mat makeWorldToCameraMat(const Vec& forward, const Vec& side, const Vec& up,const Vec&eye)
+double dAng = 1;
+double dMoveSize = 0.05;
+
+Mat makeWorldToCameraMat(const Vec& Forward, const Vec& side, const Vec& up,const Vec&eye)
 {
 	//这里直接取“从世界到相机空间变换矩阵”的逆矩阵，推导请看https://yufeiran.com/cao-gao-zhi-shang-tui/ 2.3.2节
 	Mat mMoveR = makeMoveMat(-eye.x, -eye.y, -eye.z);
@@ -45,7 +52,7 @@ Mat makeWorldToCameraMat(const Vec& forward, const Vec& side, const Vec& up,cons
 	{
 		mRotateR.m[0][i] = side[i];
 		mRotateR.m[1][i] = up[i];
-		mRotateR.m[2][i] = -forward[i];
+		mRotateR.m[2][i] = -Forward[i];
 	}
 	return mRotateR * mMoveR;
 }
@@ -85,23 +92,23 @@ Vec transform(const Vec& objVec)
 		cout << "raw :" << objVec <<endl<< " - > ";
 	// object to world
 	Mat mObjectToWorld;
-	mObjectToWorld = makeMoveMat(0, 5, 0)*makeRotateByYMat(rotateYAng)* makeRotateByXMat(rotateXAng)*makeRotateByZMat(rotateZAng);
+	mObjectToWorld = makeMoveMat(0, 4, 0)*makeRotateByYMat(rotateYAng)* makeRotateByXMat(rotateXAng)*makeRotateByZMat(rotateZAng);
 	Vec worldVec = mObjectToWorld * objVec;
 
 	if (debugMode)
 		cout << "world :" << worldVec << endl << " - > ";
 	// world to Camera
 
-	Vec forward = lookat - eye;
-	forward = forward.normal();
+	Forward = lookat - eye;
+	Forward = Forward.normal();
 
 	up = up.normal();
-	Vec side;
-	side = cross(forward, up);
+	
+	side = cross(Forward, up);
 
-	up = cross(side, forward);
+	up = cross(side, Forward);
 
-	Mat mWorldToObject = makeWorldToCameraMat(forward, side, up, eye);
+	Mat mWorldToObject = makeWorldToCameraMat(Forward, side, up, eye);
 
 	Vec CameraVec = mWorldToObject * worldVec;
 
@@ -138,27 +145,47 @@ Vec Cube[8];
 
 void GameLoop()
 {
-	ansList.clear();
-	for (int i = 0; i < 8; i++)
-	{
-		auto ans = transform(Cube[i]);
-		//cout << ans << endl;
-		ansList.push_back(ans);
-	}
+	//ansList.clear();
+	//for (int i = 0; i < 8; i++)
+	//{
+	//	auto ans = transform(Cube[i]);
+	//	//cout << ans << endl;
+	//	ansList.push_back(ans);
+	//}
 
 	CleanScreen();
 	for (int y = 0; y < screenHeight; y++)
 		for (int x = 0; x < screenWidth; x++)
 		{
 			Color color = Color(0, 0, 0);
-			DrawPoint(x, screenHeight - y, color);
+			DrawPoint(x, y, color);
 		}
 
-	for (auto& v : ansList)
+	//for (auto& v : ansList)
+	//{
+	//	Color color = Color(255, 255, 255);
+	//	DrawPoint(v.x, v.y, color);
+	//}
+	//for (auto& line : lineList)
+	//{
+	//	Color color = Color(255, 255, 255);
+	//	auto& p0 = ansList[line.first];
+	//	auto& p1 = ansList[line.second];
+	//	DrawLine(p0.x, p0.y, p1.x, p1.y);
+	//}
+	for (const auto& tri : model->triangleList)
 	{
-		Color color = Color(255, 255, 255);
-		DrawPoint(v.x, screenHeight - v.y, color);
+		const auto& p0 = model->pointList[tri.pointIndex[0]-1];
+		const auto& p1 = model->pointList[tri.pointIndex[1]-1];
+		const auto& p2 = model->pointList[tri.pointIndex[2]-1];
+		Vec P0 = transform(p0);
+		Vec P1 = transform(p1);
+		Vec P2 = transform(p2);
+		DrawLine(P0.x, P0.y, P1.x, P1.y);
+		DrawLine(P1.x, P1.y, P2.x, P2.y);
+		DrawLine(P2.x, P2.y, P0.x, P0.y);
 	}
+	
 
 	PutBufferToScreen();
 }
@@ -184,17 +211,43 @@ LRESULT CALLBACK WindowProc(
 			exit(0);
 			
 		if (wParam == 'A')
-			rotateYAng -= 0.5;
+			rotateYAng -= dAng;
 		if (wParam == 'D')
-			rotateYAng += 0.5;
+			rotateYAng += dAng;
 		if (wParam == 'W')
-			rotateXAng -= 0.5;
+			rotateXAng -= dAng;
 		if (wParam == 'S')
-			rotateXAng += 0.5;
+			rotateXAng += dAng;
 		if (wParam == 'Q')
-			rotateZAng -= 0.5;
+			rotateZAng -= dAng;
 		if (wParam == 'E')
-			rotateZAng += 0.5;
+			rotateZAng += dAng;
+
+		if (wParam == VK_UP) {
+			eye =eye +Forward * dMoveSize;
+			lookat=lookat+ Forward * dMoveSize;
+		}
+		else if (wParam == VK_DOWN) {
+			eye = eye - Forward * dMoveSize;
+			lookat = lookat - Forward * dMoveSize;
+		}
+		if (wParam == VK_LEFT)
+		{
+			eye = eye - side * dMoveSize;
+			lookat = lookat - side * dMoveSize;
+		}
+		else if (wParam == VK_RIGHT) {
+			eye = eye + side * dMoveSize;
+			lookat = lookat + side * dMoveSize;
+		}
+		else if (wParam == VK_PRIOR) {
+			eye = eye + up * dMoveSize;
+			lookat = lookat + up * dMoveSize;
+		}
+		else if (wParam == VK_NEXT) {
+			eye = eye - up * dMoveSize;
+			lookat = lookat - up * dMoveSize;
+		}
 			break;
 	}
 	case WM_SIZE:
@@ -215,7 +268,7 @@ int main()
 {
 	initWindow();
 
-
+	model = loadModel("model/cube.obj");
 
 	Cube[0] = Vec(1, -1, 1);
 	Cube[1] = Vec(1, 1, 1);
@@ -226,8 +279,20 @@ int main()
 	Cube[6] = Vec(-1, 1, -1);
 	Cube[7] = Vec(-1, -1, -1);
 
+	lineList.push_back(pair<int,int>(0, 1));
+	lineList.push_back(pair<int, int>(1, 2));
+	lineList.push_back(pair<int, int>(2, 3));
+	lineList.push_back(pair<int, int>(3, 0));
 
+	lineList.push_back(pair<int, int>(4, 5));
+	lineList.push_back(pair<int, int>(5, 6));
+	lineList.push_back(pair<int, int>(6, 7));
+	lineList.push_back(pair<int, int>(7, 4));
 
+	lineList.push_back(pair<int, int>(0, 4));
+	lineList.push_back(pair<int, int>(1, 5));
+	lineList.push_back(pair<int, int>(2, 6));
+	lineList.push_back(pair<int, int>(3, 7));
 
 
 
