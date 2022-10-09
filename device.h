@@ -30,17 +30,19 @@ public:
 
 void CleanScreen();
 
-void DrawPoint(int x, int y, Color color = Color(255, 255, 255));
-
 void PutBufferToScreen();
 
-void DrawPoint(int x, int y, const Color color);
+void DrawPoint(int x, int y, const Color& color = Color(255, 255, 255));
 
-void DrawLine(double x0, double y0, double x1, double y1,const Color color=Color(255,255,255));
+void DrawLine(double x0, double y0, double x1, double y1,const Color& color=Color(255,255,255));
 
 void CleanScreen();
 
 
 void GameLoop();
 
+
+int CalFPS();
+
+void SetTitle(const char* title);
 #endif // !DEVICE_H

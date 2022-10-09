@@ -1,5 +1,6 @@
 
 #include"mini3DRender.h"
+
 #include<vector>
 
 using namespace std;
@@ -145,14 +146,6 @@ Vec Cube[8];
 
 void GameLoop()
 {
-	//ansList.clear();
-	//for (int i = 0; i < 8; i++)
-	//{
-	//	auto ans = transform(Cube[i]);
-	//	//cout << ans << endl;
-	//	ansList.push_back(ans);
-	//}
-
 	CleanScreen();
 	for (int y = 0; y < screenHeight; y++)
 		for (int x = 0; x < screenWidth; x++)
@@ -161,18 +154,7 @@ void GameLoop()
 			DrawPoint(x, y, color);
 		}
 
-	//for (auto& v : ansList)
-	//{
-	//	Color color = Color(255, 255, 255);
-	//	DrawPoint(v.x, v.y, color);
-	//}
-	//for (auto& line : lineList)
-	//{
-	//	Color color = Color(255, 255, 255);
-	//	auto& p0 = ansList[line.first];
-	//	auto& p1 = ansList[line.second];
-	//	DrawLine(p0.x, p0.y, p1.x, p1.y);
-	//}
+
 	for (const auto& tri : model->triangleList)
 	{
 		const auto& p0 = model->pointList[tri.pointIndex[0]-1];
@@ -188,6 +170,11 @@ void GameLoop()
 	
 
 	PutBufferToScreen();
+
+	int nowFps= CalFPS();
+	char titleStr[50];
+	sprintf_s(titleStr, "FPS:%d", nowFps);
+	SetTitle(titleStr);
 }
 
 
@@ -200,9 +187,10 @@ LRESULT CALLBACK WindowProc(
 {
 	switch (uMsg)
 	{
-	case WM_DESTROY:
+	case WM_CLOSE:
 	{
-		PostQuitMessage(0);
+		exit(0);
+
 		return 0;
 	}
 	case WM_KEYDOWN:
@@ -294,11 +282,6 @@ int main()
 	lineList.push_back(pair<int, int>(2, 6));
 	lineList.push_back(pair<int, int>(3, 7));
 
-
-
-
-
-	cout << "-------" << endl;
 
 	while (1)
 	{

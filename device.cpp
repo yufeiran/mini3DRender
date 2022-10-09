@@ -1,4 +1,8 @@
 #include"device.h"
+#include<stdio.h>
+#include<string>
+#include<iostream>
+using namespace std;
 
 BYTE* buffer;
 
@@ -90,34 +94,71 @@ void updateFrame()
 	GameLoop();
 }
 
-void DrawPoint(int x, int y, const Color color)
+int CalFPS()
+{
+	static LARGE_INTEGER nFreq = {0};
+	static int FrameCount = 0;
+	static int Fps = 0;
+	static LARGE_INTEGER lastSecondTime = { 0 };
+	LARGE_INTEGER nowTime={0};
+
+	if (nFreq.QuadPart==0) {
+		QueryPerformanceFrequency(&nFreq);
+	}
+	if (lastSecondTime.QuadPart == 0) {
+		QueryPerformanceCounter(&lastSecondTime);
+	}
+
+	QueryPerformanceCounter(&nowTime);
+
+
+	FrameCount++;
+	double time = (double)(nowTime.QuadPart - lastSecondTime.QuadPart)  / (double)nFreq.QuadPart;
+	//cout << time << " ";
+	//cout << "nowTime " << nowTime.QuadPart << " lastSecondTime " << lastSecondTime.QuadPart << endl;
+	if (time >= 1) {
+		//cout << "tick!" << endl;
+		Fps = FrameCount;
+		FrameCount = 0;
+		lastSecondTime = nowTime;
+	}
+	return Fps;
+}
+
+void SetTitle(const char* title)
+{
+	SetWindowTextA(hwnd, title);
+}
+
+
+ void DrawPoint(int x, int y, const Color &color)
 {
 	if (x < 0 || x >= screenWidth)return;
 	if (y < 0 || y >= screenHeight)return;
 
-	buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 3] = color.r;
-	buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 2] = color.g;
-	buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 1] = color.b;
+	int pos = y * screenWidth * 3 + (x + 1) * 3;
+
+	buffer[pos - 3] = color.r;
+	buffer[pos - 2] = color.g;
+	buffer[pos - 1] = color.b;
 }
 
 
 void CleanScreen()
 {
-	for (int y = 0; y < screenHeight; y++)
-	{
-		for (int x = 0; x < screenWidth; x++)
-		{
-
-			buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 1] = 0;
-			buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 2] = 0;
-			buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 3] = 0;
-		}
-	}
+	memset(buffer, 0, sizeof(buffer));
+	//for (int y = 0; y < screenHeight; y++)
+	//{
+	//	for (int x = 0; x < screenWidth; x++)
+	//	{
+	//		buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 3] =0;
+	//		buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 2] = 0;
+	//		buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 1] = 0;
+	//	}
+	//}
 }
 
-
-
-void DrawLine(double x0, double y0, double x1, double y1,const Color color)
+void DrawLine_DDA(double x0, double y0, double x1, double y1, const Color& color)
 {
 	if (x1 < x0) {
 		double tempX, tempY;
@@ -143,32 +184,32 @@ void DrawLine(double x0, double y0, double x1, double y1,const Color color)
 		}
 	}
 
-	if (k < 1&&k>0) {
+	if (k < 1 && k>0) {
 		//use x iter
 		double xi = x0, yi = y0;
-		DrawPoint(xi, yi,color);
+		DrawPoint(xi, yi, color);
 		for (int x = x0; x < x1; x++) {
 			xi = xi + 1;
 			yi = yi + k;
-			DrawPoint(xi, yi,color);
+			DrawPoint(xi, yi, color);
 		}
 
 	}
-	else if(k>=1) {
+	else if (k >= 1) {
 		//use y iter	
 		double k_ = 1.0 / k;
 		double yi = y0, xi = x0;
-		DrawPoint(xi, yi,color);
+		DrawPoint(xi, yi, color);
 		for (int y = y0; y < y1; y++) {
 			yi = yi + 1;
 			xi = xi + k_;
-			DrawPoint(xi, yi,color);
+			DrawPoint(xi, yi, color);
 		}
 	}
 	else if (k < -1) {
 		//use y iter
 		double k_ = 1.0 / k;
-		double yi = y0,xi = x0;
+		double yi = y0, xi = x0;
 		DrawPoint(xi, yi, color);
 		for (int y = y0; y > y1; y--) {
 			yi = yi - 1;
@@ -186,4 +227,55 @@ void DrawLine(double x0, double y0, double x1, double y1,const Color color)
 			DrawPoint(xi, yi);
 		}
 	}
+}
+
+void DrawLine_mid(int x0, int y0, int x1, int y1, const Color& color)
+{
+	if (x1 < x0) {
+		double tempX, tempY;
+		tempX = x0;
+		x0 = x1;
+		x1 = tempX;
+		tempY = y0;
+		y0 = y1;
+		y1 = tempY;
+	}
+	if (x1 == x0) {
+		for (int y = min(y0, y1); y <= max(y0, y1); y++) {
+			DrawPoint(x0, y, color);
+		}
+		return;
+	}
+
+	double k = (y1 - y0) / (x1 - x0);
+
+	if (k > 0 && k <= 1)
+	{
+		int d = 2 * (y0 - y1) + (x1 - x0);
+
+		int x = x0;
+		int y = y0;
+		while (x != x1)
+		{
+			DrawPoint(x, y,color);
+			if ((x1 - x0) * d < 0) {
+				y++;
+				d += 2 * (y0 - y1) + 2 * (x1 - x0);
+			}
+			else if ((x1 - x0) * d > 0) {
+				d += 2 * (y0 - y1);
+			}
+			x++;
+		}
+
+	}
+
+
+
+}
+
+void DrawLine(double x0, double y0, double x1, double y1,const Color& color)
+{
+	
+	DrawLine_mid(x0, y0, x1, y1, color);
 }
