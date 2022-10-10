@@ -147,27 +147,21 @@ Vec Cube[8];
 void GameLoop()
 {
 	CleanScreen();
-	for (int y = 0; y < screenHeight; y++)
-		for (int x = 0; x < screenWidth; x++)
-		{
-			Color color = Color(0, 0, 0);
-			DrawPoint(x, y, color);
-		}
 
-
-	for (const auto& tri : model->triangleList)
-	{
-		const auto& p0 = model->pointList[tri.pointIndex[0]-1];
-		const auto& p1 = model->pointList[tri.pointIndex[1]-1];
-		const auto& p2 = model->pointList[tri.pointIndex[2]-1];
-		Vec P0 = transform(p0);
-		Vec P1 = transform(p1);
-		Vec P2 = transform(p2);
-		DrawLine(P0.x, P0.y, P1.x, P1.y);
-		DrawLine(P1.x, P1.y, P2.x, P2.y);
-		DrawLine(P2.x, P2.y, P0.x, P0.y);
-	}
-	
+	DrawLine(100, 100, 200, 100);
+	//for (const auto& tri : model->triangleList)
+	//{
+	//	const auto& p0 = model->pointList[tri.pointIndex[0]-1];
+	//	const auto& p1 = model->pointList[tri.pointIndex[1]-1];
+	//	const auto& p2 = model->pointList[tri.pointIndex[2]-1];
+	//	Vec P0 = transform(p0);
+	//	Vec P1 = transform(p1);
+	//	Vec P2 = transform(p2);
+	//	DrawLine(P0.x, P0.y, P1.x, P1.y);
+	//	DrawLine(P1.x, P1.y, P2.x, P2.y);
+	//	DrawLine(P2.x, P2.y, P0.x, P0.y);
+	//}
+	//
 
 	PutBufferToScreen();
 

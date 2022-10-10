@@ -146,7 +146,7 @@ void SetTitle(const char* title)
 
 void CleanScreen()
 {
-	memset(buffer, 0, sizeof(buffer));
+	memset(buffer, 0, sizeof(char)* screenHeight*screenWidth*3);
 	//for (int y = 0; y < screenHeight; y++)
 	//{
 	//	for (int x = 0; x < screenWidth; x++)
@@ -247,7 +247,13 @@ void DrawLine_mid(int x0, int y0, int x1, int y1, const Color& color)
 		return;
 	}
 
-	double k = (y1 - y0) / (x1 - x0);
+	double k =(double) (y1 - y0) /(double) (x1 - x0);
+
+	if (k == 0) {
+		for (int x = x0; x < x1; x++) {
+			DrawPoint(x, y0, color);
+		}
+	}
 
 	if (k > 0 && k <= 1)
 	{
@@ -267,7 +273,24 @@ void DrawLine_mid(int x0, int y0, int x1, int y1, const Color& color)
 			}
 			x++;
 		}
+	}
+	else if (k > 1) {
+		int d = 2 * (x0 - x1) + (y1 - y0);
 
+		int y = y0;
+		int x = x0;
+		while (y != y1)
+		{
+			DrawPoint(x, y, color);
+			if ((y1 - y0) * d < 0) {
+				x++;
+				d += 2 * (x0 - x1) + 2 * (y1 - y0);
+			}
+			else if ((y1 - y0) * d > 0) {
+				d += 2 * (x0 - x1);
+			}
+			y++;
+		}
 	}
 
 
@@ -278,4 +301,5 @@ void DrawLine(double x0, double y0, double x1, double y1,const Color& color)
 {
 	
 	DrawLine_mid(x0, y0, x1, y1, color);
+	//DrawLine_DDA(x0, y0, x1, y1, color);
 }
