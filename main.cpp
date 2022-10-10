@@ -39,9 +39,15 @@ vector<pair<int, int>>lineList;
 double rotateXAng = 0;
 double rotateYAng = 0;
 double rotateZAng = 0;
+int rotateXStatus = 0;
+int rotateYStatus = 0;
+int rotateZStatus = 0;
 
-double dAng = 1;
-double dMoveSize = 0.05;
+double dAng = 0.04;
+double dMoveSize = 0.02;
+int cameraMoveForward = 0;
+int cameraMoveUp = 0;
+int cameraMoveSide = 0;
 
 Mat makeWorldToCameraMat(const Vec& Forward, const Vec& side, const Vec& up,const Vec&eye)
 {
@@ -146,21 +152,58 @@ Vec Cube[8];
 
 void GameLoop()
 {
+	if (rotateYStatus == -1)
+		rotateYAng -= dAng;
+	if (rotateYStatus == 1)
+		rotateYAng += dAng;
+	if (rotateXStatus == -1)
+		rotateXAng -= dAng;
+	if (rotateXStatus == 1)
+		rotateXAng += dAng;
+	if (rotateZStatus == -1)
+		rotateZAng -= dAng;
+	if (rotateZStatus == 1)
+		rotateZAng += dAng;
+	if (cameraMoveForward==1) {
+		eye = eye + Forward * dMoveSize;
+		lookat = lookat + Forward * dMoveSize;
+	}
+	if (cameraMoveForward == -1) {
+		eye = eye - Forward * dMoveSize;
+		lookat = lookat - Forward * dMoveSize;
+	}
+	if (cameraMoveSide == 1) 
+	{
+		eye = eye - side * dMoveSize;
+		lookat = lookat - side * dMoveSize;
+	}
+	if (cameraMoveSide == -1) {
+		eye = eye + side * dMoveSize;
+		lookat = lookat + side * dMoveSize;
+	}
+	if (cameraMoveUp == 1) {
+		eye = eye + up * dMoveSize;
+		lookat = lookat + up * dMoveSize;
+	}
+	if (cameraMoveUp == -1) {
+		eye = eye - up * dMoveSize;
+		lookat = lookat - up * dMoveSize;
+	}
+
 	CleanScreen();
 
-	DrawLine(100, 100, 200, 100);
-	//for (const auto& tri : model->triangleList)
-	//{
-	//	const auto& p0 = model->pointList[tri.pointIndex[0]-1];
-	//	const auto& p1 = model->pointList[tri.pointIndex[1]-1];
-	//	const auto& p2 = model->pointList[tri.pointIndex[2]-1];
-	//	Vec P0 = transform(p0);
-	//	Vec P1 = transform(p1);
-	//	Vec P2 = transform(p2);
-	//	DrawLine(P0.x, P0.y, P1.x, P1.y);
-	//	DrawLine(P1.x, P1.y, P2.x, P2.y);
-	//	DrawLine(P2.x, P2.y, P0.x, P0.y);
-	//}
+	for (const auto& tri : model->triangleList)
+	{
+		const auto& p0 = model->pointList[tri.pointIndex[0]-1];
+		const auto& p1 = model->pointList[tri.pointIndex[1]-1];
+		const auto& p2 = model->pointList[tri.pointIndex[2]-1];
+		Vec P0 = transform(p0);
+		Vec P1 = transform(p1);
+		Vec P2 = transform(p2);
+		DrawLine(P0.x, P0.y,P0.z, P1.x, P1.y,P1.z);
+		DrawLine(P1.x, P1.y,P1.z, P2.x, P2.y,P2.z);
+		DrawLine(P2.x, P2.y,P2.z, P0.x, P0.y,P0.z);
+	}
 	//
 
 	PutBufferToScreen();
@@ -187,48 +230,79 @@ LRESULT CALLBACK WindowProc(
 
 		return 0;
 	}
+	case WM_KEYUP:
+	{
+		if (wParam == 'A')
+			rotateYStatus = 0;
+		if (wParam == 'D')
+			rotateYStatus = 0;
+		if (wParam == 'W')
+			rotateXStatus = 0;
+		if (wParam == 'S')
+			rotateXStatus = 0;
+		if (wParam == 'Q')
+			rotateZStatus = 0;
+		if (wParam == 'E')
+			rotateZStatus = 0;
+
+		if (wParam == VK_UP) {
+			cameraMoveForward = 0;
+		}
+		else if (wParam == VK_DOWN) {
+			cameraMoveForward = 0;
+		}
+		if (wParam == VK_LEFT)
+		{
+			cameraMoveSide = 0;
+
+		}
+		else if (wParam == VK_RIGHT) {
+			cameraMoveSide = 0;
+		}
+		if (wParam == VK_PRIOR) {
+			cameraMoveUp = 0;
+		}
+		else if (wParam == VK_NEXT) {
+			cameraMoveUp = 0;
+		}
+		break;
+	}
 	case WM_KEYDOWN:
 	{
 		if (wParam == VK_ESCAPE)
 			exit(0);
 			
 		if (wParam == 'A')
-			rotateYAng -= dAng;
+			rotateYStatus = -1;
 		if (wParam == 'D')
-			rotateYAng += dAng;
+			rotateYStatus = 1;
 		if (wParam == 'W')
-			rotateXAng -= dAng;
+			rotateXStatus =-1;
 		if (wParam == 'S')
-			rotateXAng += dAng;
+			rotateXStatus = 1;
 		if (wParam == 'Q')
-			rotateZAng -= dAng;
+			rotateZStatus = -1;
 		if (wParam == 'E')
-			rotateZAng += dAng;
+			rotateZStatus = 1;
 
 		if (wParam == VK_UP) {
-			eye =eye +Forward * dMoveSize;
-			lookat=lookat+ Forward * dMoveSize;
+			cameraMoveForward = 1;
 		}
 		else if (wParam == VK_DOWN) {
-			eye = eye - Forward * dMoveSize;
-			lookat = lookat - Forward * dMoveSize;
+			cameraMoveForward = -1;
 		}
 		if (wParam == VK_LEFT)
 		{
-			eye = eye - side * dMoveSize;
-			lookat = lookat - side * dMoveSize;
+			cameraMoveSide = 1;
 		}
 		else if (wParam == VK_RIGHT) {
-			eye = eye + side * dMoveSize;
-			lookat = lookat + side * dMoveSize;
+			cameraMoveSide = -1;
 		}
-		else if (wParam == VK_PRIOR) {
-			eye = eye + up * dMoveSize;
-			lookat = lookat + up * dMoveSize;
+		if (wParam == VK_PRIOR) {
+			cameraMoveUp = 1;
 		}
-		else if (wParam == VK_NEXT) {
-			eye = eye - up * dMoveSize;
-			lookat = lookat - up * dMoveSize;
+		if (wParam == VK_NEXT) {
+			cameraMoveUp = -1;
 		}
 			break;
 	}
@@ -250,7 +324,10 @@ int main()
 {
 	initWindow();
 
-	model = loadModel("model/cube.obj");
+	if (0)
+		model = loadModel("model/bunny.obj");
+	else
+		model = loadModel("model/cube.obj");
 
 	Cube[0] = Vec(1, -1, 1);
 	Cube[1] = Vec(1, 1, 1);

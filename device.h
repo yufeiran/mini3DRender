@@ -32,9 +32,9 @@ void CleanScreen();
 
 void PutBufferToScreen();
 
-void DrawPoint(int x, int y, const Color& color = Color(255, 255, 255));
+void DrawPoint(int x, int y,double z, const Color& color = Color(255, 255, 255));
 
-void DrawLine(double x0, double y0, double x1, double y1,const Color& color=Color(255,255,255));
+void DrawLine(double x0, double y0,double z0, double x1, double y1,double z1,const Color& color=Color(255,255,255));
 
 void CleanScreen();
 

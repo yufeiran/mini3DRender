@@ -6,6 +6,7 @@ using namespace std;
 
 BYTE* buffer;
 
+
 HDC screen_hdc;
 HDC hCompatibleDC;
 HBITMAP hCompatibleBitmap;
@@ -20,6 +21,7 @@ MSG msg;
 int screenWidth=800;
 int screenHeight=600;
 double screenRatio;
+double *ZBuffer;
 
 void PutBufferToScreen()
 {
@@ -36,6 +38,12 @@ void initWindow()
 
 	//buffer = (BYTE*)malloc(sizeof(BYTE) * picWidth * picHeight * bits / 8);
 	buffer = new BYTE[sizeof(BYTE) * screenWidth * screenHeight * bits / 8];
+	ZBuffer = new double[screenHeight * screenWidth];
+	for (int i = 0; i < screenHeight; i++) {
+		for (int j = 0; j < screenWidth; j++) {
+			ZBuffer[i * screenWidth + j] = 1;
+		}
+	}
 	hInstance = GetModuleHandle(NULL);
 
 	Draw.cbClsExtra = 0;
@@ -131,22 +139,35 @@ void SetTitle(const char* title)
 }
 
 
- void DrawPoint(int x, int y, const Color &color)
+ void DrawPoint(int x, int y,double z, const Color &color)
 {
 	if (x < 0 || x >= screenWidth)return;
 	if (y < 0 || y >= screenHeight)return;
+	
 
-	int pos = y * screenWidth * 3 + (x + 1) * 3;
+	int pos = y * screenWidth + (x + 1) ;
+	double screenZ = 1 - ZBuffer[pos - 1];
+	if (z > screenZ)
+	{
+		return;
+	}
 
-	buffer[pos - 3] = color.r;
-	buffer[pos - 2] = color.g;
-	buffer[pos - 1] = color.b;
+	buffer[pos*3 - 3] = color.r;
+	buffer[pos*3 - 2] = color.g;
+	buffer[pos *3- 1] = color.b;
+	ZBuffer[pos - 1] = 1-z;
 }
 
 
 void CleanScreen()
 {
 	memset(buffer, 0, sizeof(char)* screenHeight*screenWidth*3);
+	memset(ZBuffer, 0, sizeof(double) * screenHeight * screenWidth );
+	//for (int y = 0; y < screenHeight; y++) {
+	//	for (int x = 0; x < screenWidth; x++) {
+	//		ZBuffer[y * screenWidth + x] = 1;
+	//	}
+	//}
 	//for (int y = 0; y < screenHeight; y++)
 	//{
 	//	for (int x = 0; x < screenWidth; x++)
@@ -158,40 +179,48 @@ void CleanScreen()
 	//}
 }
 
-void DrawLine_DDA(double x0, double y0, double x1, double y1, const Color& color)
+void DrawLine_DDA(double x0, double y0,double z0, double x1, double y1,double z1, const Color& color)
 {
 	if (x1 < x0) {
-		double tempX, tempY;
+		int tempX, tempY;
+		double tempZ;
 		tempX = x0;
 		x0 = x1;
 		x1 = tempX;
 		tempY = y0;
 		y0 = y1;
 		y1 = tempY;
+		tempZ = z0;
+		z0 = z1;
+		z1 = tempZ;
+
 	}
 	if (x1 == x0) {
 		for (int y = min(y0, y1); y <= max(y0, y1); y++) {
-			DrawPoint(x0, y, color);
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x0, y, nowZ, color);
 		}
 		return;
 	}
 
-	double k = (y1 - y0) / (x1 - x0);
-
-	if (k == 0) {
+	//k=0
+	if (y1 == y0) {
 		for (int x = x0; x < x1; x++) {
-			DrawPoint(x, y0, color);
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y0, nowZ, color);
 		}
+		return;
 	}
-
+	double k = (double)(y0 - y1) / (double)(x0 - x1);
 	if (k < 1 && k>0) {
 		//use x iter
 		double xi = x0, yi = y0;
-		DrawPoint(xi, yi, color);
+		DrawPoint(xi, yi, z0,color);
 		for (int x = x0; x < x1; x++) {
 			xi = xi + 1;
 			yi = yi + k;
-			DrawPoint(xi, yi, color);
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(xi, yi, nowZ,color);
 		}
 
 	}
@@ -199,107 +228,360 @@ void DrawLine_DDA(double x0, double y0, double x1, double y1, const Color& color
 		//use y iter	
 		double k_ = 1.0 / k;
 		double yi = y0, xi = x0;
-		DrawPoint(xi, yi, color);
+		DrawPoint(xi, yi, z0,color);
 		for (int y = y0; y < y1; y++) {
 			yi = yi + 1;
 			xi = xi + k_;
-			DrawPoint(xi, yi, color);
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(xi, yi,nowZ, color);
 		}
 	}
 	else if (k < -1) {
 		//use y iter
 		double k_ = 1.0 / k;
 		double yi = y0, xi = x0;
-		DrawPoint(xi, yi, color);
+		DrawPoint(xi, yi,z0, color);
 		for (int y = y0; y > y1; y--) {
 			yi = yi - 1;
 			xi = xi - k_;
-			DrawPoint(xi, yi, color);
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(xi, yi,nowZ, color);
 		}
 	}
 	else if (k < 0 && k >= -1) {
 		// use x iter
 		double xi = x0, yi = y0;
-		DrawPoint(xi, yi, color);
+		DrawPoint(xi, yi,z0, color);
 		for (int x = x0; x < x1; x++) {
 			xi = xi + 1;
 			yi = yi + k;
-			DrawPoint(xi, yi);
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(xi, yi,nowZ,color);
 		}
 	}
 }
 
-void DrawLine_mid(int x0, int y0, int x1, int y1, const Color& color)
+void DrawLine_mid(int x0, int y0,double z0, int x1, int y1,double z1, const Color& color)
 {
 	if (x1 < x0) {
-		double tempX, tempY;
+		int tempX, tempY;
+		double tempZ;
 		tempX = x0;
 		x0 = x1;
 		x1 = tempX;
 		tempY = y0;
 		y0 = y1;
 		y1 = tempY;
+		tempZ = z0;
+		z0 = z1;
+		z1 = tempZ;
+
 	}
 	if (x1 == x0) {
 		for (int y = min(y0, y1); y <= max(y0, y1); y++) {
-			DrawPoint(x0, y, color);
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x0, y, nowZ, color);
 		}
 		return;
 	}
 
-	double k =(double) (y1 - y0) /(double) (x1 - x0);
-
-	if (k == 0) {
+	//k=0
+	if (y1 == y0) {
 		for (int x = x0; x < x1; x++) {
-			DrawPoint(x, y0, color);
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y0, nowZ, color);
 		}
+		return;
 	}
+
+	double k =(double) (y0 - y1) /(double) (x0 - x1);
+
+	// Ax+By+C
+	// A=(y1-y0) B=(x0-x1)
+	int A = y0 - y1;
+	int B = x1 - x0;
+
 
 	if (k > 0 && k <= 1)
 	{
-		int d = 2 * (y0 - y1) + (x1 - x0);
+		int d = 2 * A + B;
 
 		int x = x0;
 		int y = y0;
 		while (x != x1)
 		{
-			DrawPoint(x, y,color);
-			if ((x1 - x0) * d < 0) {
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y,nowZ,color);
+			if (B * d < 0) {
 				y++;
-				d += 2 * (y0 - y1) + 2 * (x1 - x0);
+				d += 2 * A + 2 * B;
 			}
-			else if ((x1 - x0) * d > 0) {
-				d += 2 * (y0 - y1);
+			else if (B * d > 0) {
+				d += 2 * A;
 			}
 			x++;
 		}
 	}
 	else if (k > 1) {
-		int d = 2 * (x0 - x1) + (y1 - y0);
+		int d = A+2*B;
 
 		int y = y0;
 		int x = x0;
 		while (y != y1)
 		{
-			DrawPoint(x, y, color);
-			if ((y1 - y0) * d < 0) {
-				x++;
-				d += 2 * (x0 - x1) + 2 * (y1 - y0);
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x, y, nowZ, color);
+			if (B * d < 0) {
+				d += 2 * B;
 			}
-			else if ((y1 - y0) * d > 0) {
-				d += 2 * (x0 - x1);
+			else if (B * d > 0) {
+				d += 2 * A+2*B;
+				x++;
 			}
 			y++;
 		}
 	}
+	else if (k >= -1&&k<0) {
+		int d = 2 * A - B;
 
+		int x = x0;
+		int y = y0;
+		while (x != x1)
+		{
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y, nowZ, color);
+			if (B * d >0) {
 
+				y--;
+				d += 2*A;
+			}
+			else if (B * d < 0) {
+				d +=2*( A - B);
+			}
+			x++;
+		}
+	}
+	else if (k < -1) {
+		int d = A-2*B;
 
+		int y = y0;
+		int x = x0;
+		while (y != y1)
+		{
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x, y, nowZ, color);
+			if (B * d > 0) {
+				d += -2*B;
+			}
+			else if (B * d < 0) {
+				x++;
+				d +=2*( A - B);
+			}
+			y--;
+		}
+	}
 }
 
-void DrawLine(double x0, double y0, double x1, double y1,const Color& color)
+
+//浮点运算版本Bresenham算法
+void DrawLine_Bresenham_Raw(int x0, int y0,double z0, int x1, int y1,double z1, const Color& color)
 {
+
+	if (x1 < x0) {
+		int tempX, tempY;
+		double tempZ;
+		tempX = x0;
+		x0 = x1;
+		x1 = tempX;
+		tempY = y0;
+		y0 = y1;
+		y1 = tempY;
+		tempZ = z0;
+		z0 = z1;
+		z1 = tempZ;
+
+	}
+	if (x1 == x0) {
+		for (int y = min(y0, y1); y <= max(y0, y1); y++) {
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x0, y, nowZ, color);
+		}
+		return;
+	}
+
+	//k=0
+	if (y1 == y0) {
+		for (int x = x0; x < x1; x++) {
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y0, nowZ, color);
+		}
+		return;
+	}
+
+	double k = (double)(y1 - y0) / (double)(x1 - x0);
+
+	double d = 0;
+
+
+	if (k >= 0 && k < 1) {
+		int y = y0;
+		for (int x = x0; x < x1; x++)
+		{
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y, nowZ, color);
+			d += k;
+			if (d > 0.5) {
+				y++;
+				d -= 1;
+			}
+		}
+	}
+	else if (k >= 1) {
+		int x = x0;
+		double _k = 1.0 / k;
+		for (int y = y0; y < y1; y++)
+		{
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x, y, nowZ,color);
+			d += _k;
+			if (d > 0.5) {
+				x++;
+				d -= 1;
+			}
+		}
+	}
+	else if (k<0 && k>-1) {
+		int y = y0;
+		double _k = -k;
+		for (int x = x0; x < x1; x++)
+		{
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y, nowZ,color);
+			d += _k;
+			if (d > 0.5) {
+				y--;
+				d -= 1;
+			}
+		}
+	}
+	else if (k <= -1) {
+		int x = x0;
+		double _k = -1.0 / k;
+		for (int y = y0; y > y1; y--)
+		{
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x, y,nowZ, color);
+			d += _k;
+			if (d > 0.5) {
+				x++;
+				d -= 1;
+			}
+		}
+	}
+}
+
+void DrawLine_Bresenham(int x0, int y0,double z0, int x1, int y1,double z1, const Color& color)
+{
+	if (x1 < x0) {
+		int tempX, tempY;
+		double tempZ;
+		tempX = x0;
+		x0 = x1;
+		x1 = tempX;
+		tempY = y0;
+		y0 = y1;
+		y1 = tempY;
+		tempZ = z0;
+		z0 = z1;
+		z1 = tempZ;
+
+	}
+	if (x1 == x0) {
+		for (int y = min(y0, y1); y <= max(y0, y1); y++) {
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x0, y, nowZ,color);
+		}
+		return;
+	}
+
+	//k=0
+	if (y1==y0) {
+		for (int x = x0; x < x1; x++) {
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y0,nowZ, color);
+		}
+		return;
+	}
+	int dx = x1 - x0, dy = y1 - y0;
+	bool kSign = ((y1 - y0) >= 0 && (x1 - x0) >= 0) ? true : false; //true => positive false =>negative
+	bool kGreaterThenOne = (abs(y1 - y0) > abs(x1 - x0)) ? true : false;
+
+	int d = 0;
+	// 0<k<=1
+	if (kSign == true && kGreaterThenOne == false) {
+		int y = y0;
+
+		for (int x = x0; x < x1; x++) {
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y, nowZ,color);
+			d += 2 * dy;
+			if (d > dx) {
+				d -= 2 * dx;
+				y++;
+			}
+		}
+	}
+	//k>1
+	else if (kSign == true && kGreaterThenOne == true) {
+		int x = x0;
+
+		for (int y = y0; y < y1; y++) {
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x, y, nowZ,color);
+			d += 2 * dx;
+			if (d > dy) {
+				d -= 2 * dy;
+				x++;
+			}
+		}
+	}
+	//-1<k<=0
+	else if(kSign==false&&kGreaterThenOne==false){
+		int y = y0;
+
+		for (int x = x0; x < x1; x++) {
+			double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+			DrawPoint(x, y,nowZ, color);
+			d += -2 * dy;
+			if (d > dx) {
+				d -= 2 * dx;
+				y--;
+			}
+		}
+	}
+	//k<-1
+	else if (kSign == false && kGreaterThenOne == true) {
+		int x = x0;
+
+		for (int y = y0; y > y1; y--) {
+			double nowZ = z0 + (double)(y - y0) / (double)(y1 - y0) * (z1 - z0);
+			DrawPoint(x, y,nowZ, color);
+			d += 2 * dx;
+			if (d > -dy) {
+				d -= -2 * dy;
+				x++;
+			}
+		}
+	}
 	
-	DrawLine_mid(x0, y0, x1, y1, color);
-	//DrawLine_DDA(x0, y0, x1, y1, color);
+}
+
+
+
+void DrawLine(double x0, double y0,double z0, double x1, double y1,double z1,const Color& color)
+{
+	DrawLine_Bresenham(x0, y0,z0, x1, y1,z1, color);
+	//DrawLine_Bresenham_Raw(x0, y0,z0, x1, y1,z1, color);
+	//DrawLine_mid(x0, y0,z0, x1, y1,z1, color);
+	//DrawLine_DDA(x0, y0,z0, x1, y1,z1, color);
 }
