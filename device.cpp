@@ -21,7 +21,9 @@ MSG msg;
 int screenWidth=800;
 int screenHeight=600;
 double screenRatio;
-double *ZBuffer;
+double* ZBuffer;
+
+double oneFrameTime;
 
 void PutBufferToScreen()
 {
@@ -108,6 +110,7 @@ int CalFPS()
 	static int FrameCount = 0;
 	static int Fps = 0;
 	static LARGE_INTEGER lastSecondTime = { 0 };
+	static LARGE_INTEGER lastFrameTime = { 0 };
 	LARGE_INTEGER nowTime={0};
 
 	if (nFreq.QuadPart==0) {
@@ -116,12 +119,17 @@ int CalFPS()
 	if (lastSecondTime.QuadPart == 0) {
 		QueryPerformanceCounter(&lastSecondTime);
 	}
+	if (lastSecondTime.QuadPart == 0) {
+		QueryPerformanceCounter(&lastFrameTime);
+	}
 
 	QueryPerformanceCounter(&nowTime);
 
 
 	FrameCount++;
 	double time = (double)(nowTime.QuadPart - lastSecondTime.QuadPart)  / (double)nFreq.QuadPart;
+	oneFrameTime = (double)(nowTime.QuadPart - lastFrameTime.QuadPart) / (double)nFreq.QuadPart;
+	QueryPerformanceCounter(&lastFrameTime);
 	//cout << time << " ";
 	//cout << "nowTime " << nowTime.QuadPart << " lastSecondTime " << lastSecondTime.QuadPart << endl;
 	if (time >= 1) {
@@ -152,9 +160,9 @@ void SetTitle(const char* title)
 		return;
 	}
 
-	buffer[pos*3 - 3] = color.r;
+	buffer[pos*3 - 1] = color.r;
 	buffer[pos*3 - 2] = color.g;
-	buffer[pos *3- 1] = color.b;
+	buffer[pos *3- 3] = color.b;
 	ZBuffer[pos - 1] = 1-z;
 }
 
@@ -584,4 +592,102 @@ void DrawLine(double x0, double y0,double z0, double x1, double y1,double z1,con
 	//DrawLine_Bresenham_Raw(x0, y0,z0, x1, y1,z1, color);
 	//DrawLine_mid(x0, y0,z0, x1, y1,z1, color);
 	//DrawLine_DDA(x0, y0,z0, x1, y1,z1, color);
+}
+
+void DrawScanLine(double x0, double z0, double x1, double z1, double y, const Color& color)
+{
+	if (x0 > x1) {
+		swap(x0, x1);
+		swap(z0, z1);
+	}
+	for (int x = x0; x < x1; x++) {
+		double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+		DrawPoint(x, y, nowZ, color);
+	}
+	return;
+}
+
+void DrawTopFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const Color& color)
+{
+	double XL = v1.x, XR = v1.x;
+	double dX1 = -(v2.x - v1.x) / (v2.y - v1.y), dX2 = -(v3.x - v1.x) / (v3.y - v1.y);
+	double ZL = v1.z, ZR = v1.z;
+	double dZ1 =- (v2.z - v1.z) / (v2.y - v1.y), dZ2 =- (v3.z - v1.z) / (v3.y - v1.y);
+	for (int y = v1.y; y > v2.y; y--)
+	{
+		DrawScanLine(XL, ZL, XR, ZR, y, color);
+		XL += dX1;
+		XR += dX2;
+		ZL += dZ1;
+		ZR += dZ2; 
+	}
+}
+
+void DrawBottomFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const Color& color)
+{
+
+
+	double XL = v1.x, XR = v1.x;
+	double dX1 = (v2.x - v1.x) / (v2.y - v1.y), dX2 = (v3.x - v1.x) / (v3.y - v1.y);
+	double ZL = v1.z, ZR = v1.z;
+	double dZ1 = (v2.z - v1.z) / (v2.y - v1.y), dZ2 = (v3.z - v1.z) / (v3.y - v1.y);
+	for (int y = v1.y; y < v2.y; y++)
+	{
+		DrawScanLine(XL, ZL, XR, ZR, y, color);
+		XL += dX1;
+		XR += dX2;
+		ZL += dZ1;
+		ZR += dZ2;
+	}
+}
+
+void DrawTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const Color& color)
+{
+	//按y值从小到大排序3个顶点
+	Vec V[3] = { v1,v2,v3 };
+	int maxIndex=0, minIndex = 0;
+	Vec maxV = v1, minV = v1,midV=v1;
+	for (int i = 0; i < 3; i++)
+	{
+		if (V[i].y < minV.y)
+		{
+			minIndex = i;
+			minV = V[i];
+		}
+		if (V[i].y > maxV.y)
+		{
+			maxIndex = i;
+			maxV = V[i];
+		}
+	}
+	int midIndex;
+	for (int i = 0; i < 3; i++) {
+		if (i == maxIndex || i == minIndex) {
+			continue;
+		}
+		else {
+			midIndex = i;
+			midV = V[i];
+			
+		}
+	}
+	Vec V1 = minV, V2 = midV, V3 = maxV;
+
+	if (V1.y == V2.y) {
+		 DrawTopFlatTriangle(V3, V1, V2, color);
+	}
+	else if (V2.y == V3.y) {
+		DrawBottomFlatTriangle(V1, V3, V2, color);
+	}
+	else {
+		Vec V4;
+		V4.y = V2.y;
+		V4.x = V1.x + (V4.y - V1.y) / (V3.y - V1.y) * (V3.x - V1.x);
+		V4.z = V1.z + (V4.y - V1.y) / (V3.y - V1.y) * (V3.z - V1.z);
+
+		 DrawBottomFlatTriangle(V1, V2, V4, color);
+		 DrawTopFlatTriangle(V3, V2, V4, color);
+
+	}
+
 }

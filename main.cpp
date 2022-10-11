@@ -43,8 +43,8 @@ int rotateXStatus = 0;
 int rotateYStatus = 0;
 int rotateZStatus = 0;
 
-double dAng = 0.04;
-double dMoveSize = 0.02;
+double dAng = 20;
+double dMoveSize = 0.5;
 int cameraMoveForward = 0;
 int cameraMoveUp = 0;
 int cameraMoveSide = 0;
@@ -153,44 +153,52 @@ Vec Cube[8];
 void GameLoop()
 {
 	if (rotateYStatus == -1)
-		rotateYAng -= dAng;
+		rotateYAng -= dAng*oneFrameTime;
 	if (rotateYStatus == 1)
-		rotateYAng += dAng;
+		rotateYAng += dAng * oneFrameTime;
 	if (rotateXStatus == -1)
-		rotateXAng -= dAng;
+		rotateXAng -= dAng * oneFrameTime;
 	if (rotateXStatus == 1)
-		rotateXAng += dAng;
+		rotateXAng += dAng * oneFrameTime;
 	if (rotateZStatus == -1)
-		rotateZAng -= dAng;
+		rotateZAng -= dAng * oneFrameTime;
 	if (rotateZStatus == 1)
-		rotateZAng += dAng;
+		rotateZAng += dAng * oneFrameTime;
 	if (cameraMoveForward==1) {
-		eye = eye + Forward * dMoveSize;
-		lookat = lookat + Forward * dMoveSize;
+		eye = eye + Forward * dMoveSize * oneFrameTime;
+		lookat = lookat + Forward * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveForward == -1) {
-		eye = eye - Forward * dMoveSize;
-		lookat = lookat - Forward * dMoveSize;
+		eye = eye - Forward * dMoveSize * oneFrameTime;
+		lookat = lookat - Forward * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveSide == 1) 
 	{
-		eye = eye - side * dMoveSize;
-		lookat = lookat - side * dMoveSize;
+		eye = eye - side * dMoveSize * oneFrameTime;
+		lookat = lookat - side * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveSide == -1) {
-		eye = eye + side * dMoveSize;
-		lookat = lookat + side * dMoveSize;
+		eye = eye + side * dMoveSize * oneFrameTime;
+		lookat = lookat + side * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveUp == 1) {
-		eye = eye + up * dMoveSize;
-		lookat = lookat + up * dMoveSize;
+		eye = eye + up * dMoveSize * oneFrameTime;
+		lookat = lookat + up * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveUp == -1) {
-		eye = eye - up * dMoveSize;
-		lookat = lookat - up * dMoveSize;
+		eye = eye - up * dMoveSize * oneFrameTime;
+		lookat = lookat - up * dMoveSize * oneFrameTime;
 	}
 
 	CleanScreen();
+
+	Vec v1 = { 50,150,0.5 }, v2 = { 10,50,0.5 }, v3 = { 100,50,0.4 },v4={10,10,0.3};
+	// DrawTopFlatTriangle(v1, v2, v3, Color(203, 64, 66));
+	// DrawBottomFlatTriangle(v4, v2, v3, Color(88, 178, 220));
+
+	//DrawTriangle(v1, v2, v3,Color(203,64,66));
+	//DrawTriangle(v4, v2, v3, Color(88, 178, 220));
+	//DrawTriangle(v1, v4, v2, Color(88, 178, 220));
 
 	for (const auto& tri : model->triangleList)
 	{
@@ -200,11 +208,13 @@ void GameLoop()
 		Vec P0 = transform(p0);
 		Vec P1 = transform(p1);
 		Vec P2 = transform(p2);
-		DrawLine(P0.x, P0.y,P0.z, P1.x, P1.y,P1.z);
-		DrawLine(P1.x, P1.y,P1.z, P2.x, P2.y,P2.z);
-		DrawLine(P2.x, P2.y,P2.z, P0.x, P0.y,P0.z);
+
+		DrawTriangle(P0, P1, P2, Color(88, 178, 220));
+		DrawLine(P0.x, P0.y, P0.z, P1.x, P1.y, P1.z);
+		DrawLine(P1.x, P1.y, P1.z, P2.x, P2.y, P2.z);
+		DrawLine(P2.x, P2.y, P2.z, P0.x, P0.y, P0.z);
 	}
-	//
+	
 
 	PutBufferToScreen();
 
@@ -324,7 +334,7 @@ int main()
 {
 	initWindow();
 
-	if (0)
+	if (1)
 		model = loadModel("model/bunny.obj");
 	else
 		model = loadModel("model/cube.obj");

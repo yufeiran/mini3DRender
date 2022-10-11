@@ -1,7 +1,7 @@
 #pragma once
 #ifndef DEVICE_H
 #define DEVICE_H
-
+#include"unit.h"
 #include<Windows.h>
 const int bits = 24;
 
@@ -9,6 +9,7 @@ const int bits = 24;
 extern int screenWidth;
 extern int screenHeight;
 extern double screenRatio;
+extern double oneFrameTime;
 
 void initWindow();
 void updateFrame();
@@ -36,6 +37,13 @@ void DrawPoint(int x, int y,double z, const Color& color = Color(255, 255, 255))
 
 void DrawLine(double x0, double y0,double z0, double x1, double y1,double z1,const Color& color=Color(255,255,255));
 
+void DrawScanLine(double x0, double z0, double x1, double z1, double y, const Color& color = Color(255, 255, 255));
+
+void DrawTopFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const Color& color = Color(255, 255, 255));
+void DrawBottomFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const Color& color = Color(255, 255, 255));
+
+void DrawTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const Color& color = Color(255, 255, 255));
+
 void CleanScreen();
 
 
@@ -45,4 +53,5 @@ void GameLoop();
 int CalFPS();
 
 void SetTitle(const char* title);
+
 #endif // !DEVICE_H
