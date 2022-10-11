@@ -613,7 +613,11 @@ void DrawTopFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const Colo
 	double dX1 = -(v2.x - v1.x) / (v2.y - v1.y), dX2 = -(v3.x - v1.x) / (v3.y - v1.y);
 	double ZL = v1.z, ZR = v1.z;
 	double dZ1 =- (v2.z - v1.z) / (v2.y - v1.y), dZ2 =- (v3.z - v1.z) / (v3.y - v1.y);
-	for (int y = v1.y; y > v2.y; y--)
+	if (round(v1.y) - round(v2.y) <= 1) {
+		DrawScanLine(XL, ZL, XR, ZR, round(v1.y), color);
+		return;
+	}
+	for (int y =round( v1.y); y > v2.y; y--)
 	{
 		DrawScanLine(XL, ZL, XR, ZR, y, color);
 		XL += dX1;
@@ -631,7 +635,11 @@ void DrawBottomFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const C
 	double dX1 = (v2.x - v1.x) / (v2.y - v1.y), dX2 = (v3.x - v1.x) / (v3.y - v1.y);
 	double ZL = v1.z, ZR = v1.z;
 	double dZ1 = (v2.z - v1.z) / (v2.y - v1.y), dZ2 = (v3.z - v1.z) / (v3.y - v1.y);
-	for (int y = v1.y; y < v2.y; y++)
+	if (round(v2.y) - round(v1.y) <= 1) {
+		DrawScanLine(XL, ZL, XR, ZR, round(v1.y), color);
+		return;
+	}
+	for (int y = round(v1.y); y <v2.y; y++)
 	{
 		DrawScanLine(XL, ZL, XR, ZR, y, color);
 		XL += dX1;
@@ -672,6 +680,9 @@ void DrawTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const Color& colo
 		}
 	}
 	Vec V1 = minV, V2 = midV, V3 = maxV;
+	V1.x = (int)V1.x; V1.y = (int)V1.y;
+	V2.x = (int)V2.x; V2.y = (int)V2.y;
+	V3.x = (int)V3.x; V3.y = (int)V3.y;
 
 	if (V1.y == V2.y) {
 		 DrawTopFlatTriangle(V3, V1, V2, color);
@@ -685,8 +696,9 @@ void DrawTriangle(const Vec& v1, const Vec& v2, const Vec& v3, const Color& colo
 		V4.x = V1.x + (V4.y - V1.y) / (V3.y - V1.y) * (V3.x - V1.x);
 		V4.z = V1.z + (V4.y - V1.y) / (V3.y - V1.y) * (V3.z - V1.z);
 
-		 DrawBottomFlatTriangle(V1, V2, V4, color);
-		 DrawTopFlatTriangle(V3, V2, V4, color);
+		DrawBottomFlatTriangle(V1, V2, V4, color);
+		DrawScanLine(V2.x, V2.z, V4.x, V4.z, V2.y, color);
+		DrawTopFlatTriangle(V3, V2, V4, color);
 
 	}
 

@@ -149,6 +149,8 @@ Vec transform(const Vec& objVec)
 }
 
 Vec Cube[8];
+const int randomColorSum = 1000;
+Color randColorList[randomColorSum];
 
 void GameLoop()
 {
@@ -199,7 +201,7 @@ void GameLoop()
 	//DrawTriangle(v1, v2, v3,Color(203,64,66));
 	//DrawTriangle(v4, v2, v3, Color(88, 178, 220));
 	//DrawTriangle(v1, v4, v2, Color(88, 178, 220));
-
+	int i = 0;
 	for (const auto& tri : model->triangleList)
 	{
 		const auto& p0 = model->pointList[tri.pointIndex[0]-1];
@@ -210,6 +212,9 @@ void GameLoop()
 		Vec P2 = transform(p2);
 
 		DrawTriangle(P0, P1, P2, Color(88, 178, 220));
+		//DrawTriangle(P0, P1, P2, randColorList[i]);
+		i++;
+		if (i > randomColorSum)i = 0;
 		DrawLine(P0.x, P0.y, P0.z, P1.x, P1.y, P1.z);
 		DrawLine(P1.x, P1.y, P1.z, P2.x, P2.y, P2.z);
 		DrawLine(P2.x, P2.y, P2.z, P0.x, P0.y, P0.z);
@@ -333,35 +338,18 @@ LRESULT CALLBACK WindowProc(
 int main()
 {
 	initWindow();
+	
+	for (int i = 0; i < randomColorSum; i++)
+	{
+		randColorList[i] = Color(rand() % 256, rand() % 256, rand() % 256);
+	}
+	
 
 	if (1)
 		model = loadModel("model/bunny.obj");
 	else
 		model = loadModel("model/cube.obj");
 
-	Cube[0] = Vec(1, -1, 1);
-	Cube[1] = Vec(1, 1, 1);
-	Cube[2] = Vec(-1, 1, 1);
-	Cube[3] = Vec(-1, -1, 1);
-	Cube[4] = Vec(1, -1, -1);
-	Cube[5] = Vec(1, 1, -1);
-	Cube[6] = Vec(-1, 1, -1);
-	Cube[7] = Vec(-1, -1, -1);
-
-	lineList.push_back(pair<int,int>(0, 1));
-	lineList.push_back(pair<int, int>(1, 2));
-	lineList.push_back(pair<int, int>(2, 3));
-	lineList.push_back(pair<int, int>(3, 0));
-
-	lineList.push_back(pair<int, int>(4, 5));
-	lineList.push_back(pair<int, int>(5, 6));
-	lineList.push_back(pair<int, int>(6, 7));
-	lineList.push_back(pair<int, int>(7, 4));
-
-	lineList.push_back(pair<int, int>(0, 4));
-	lineList.push_back(pair<int, int>(1, 5));
-	lineList.push_back(pair<int, int>(2, 6));
-	lineList.push_back(pair<int, int>(3, 7));
 
 
 	while (1)

@@ -6,6 +6,7 @@
 const int bits = 24;
 
 
+
 extern int screenWidth;
 extern int screenHeight;
 extern double screenRatio;
