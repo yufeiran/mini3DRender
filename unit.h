@@ -122,4 +122,16 @@ struct Triangle
 		pointIndex[2] = ic;
 	}
 };
+
+struct Texture
+{
+	int width, height;
+	int channel;
+	unsigned char* data;
+	unsigned char getData(int x, int y) const {
+		return data[y * width + x];
+	}
+};
+
+Texture loadTexture(const char* filepath);
 #endif // !UNIT_H

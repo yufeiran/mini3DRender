@@ -1,4 +1,7 @@
 #include"unit.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include"stb_image.h"
+
 
 double degToRad(double ang)
 {
@@ -127,4 +130,13 @@ std::ostream& operator<<(std::ostream& os, const Mat& mat)
 	}
 
 	return os;
+}
+
+
+Texture loadTexture(const char* filepath)
+{
+	Texture t;
+	t.data = stbi_load(filepath, &t.width, &t.height, &t.channel, 0);
+
+	return t;
 }

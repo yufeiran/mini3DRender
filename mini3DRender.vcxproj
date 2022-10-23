@@ -136,6 +136,7 @@
     <ClInclude Include="device.h" />
     <ClInclude Include="mini3DRender.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="stb_image.h" />
     <ClInclude Include="unit.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

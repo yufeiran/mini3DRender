@@ -10,6 +10,7 @@ struct Model
 {
 	std::vector<Vec>pointList;
 	std::vector<Triangle>triangleList;
+
 };
 
 Model* loadModel(const char* filepath);
