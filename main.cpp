@@ -36,12 +36,16 @@ vector<Vec>ansList;
 vector<pair<int, int>>lineList;
 
 
+Vec moveVec = { 4.5,5,0 };
 double rotateXAng = 0;
 double rotateYAng = 0;
 double rotateZAng = 0;
 int rotateXStatus = 0;
 int rotateYStatus = 0;
 int rotateZStatus = 0;
+double scaleX = 1;
+double scaleY = 1;
+double scaleZ = 1;
 
 double dAng = 20;
 double dMoveSize = 0.5;
@@ -93,13 +97,13 @@ Mat makeClipToScreenMat(const double x0, const double y0, const double width, co
 }
 
 
-Vec transform(const Vec& objVec)
+Vec transform(const Vec& objVec,const Vec&moveVec,const double rotateXAng ,const double rotateYAng,const double rotateZAng,const double  sx, const double sy, const double sz)
 {
 	if(debugMode)
 		cout << "raw :" << objVec <<endl<< " - > ";
 	// object to world
 	Mat mObjectToWorld;
-	mObjectToWorld = makeMoveMat(0, 4, 0)*makeRotateByYMat(rotateYAng)* makeRotateByXMat(rotateXAng)*makeRotateByZMat(rotateZAng);
+	mObjectToWorld = makeMoveMat(moveVec.x, moveVec.y, moveVec.z)*makeRotateByYMat(rotateYAng)* makeRotateByXMat(rotateXAng)*makeRotateByZMat(rotateZAng)* makeScaleMat(sx,sy,sz);
 	Vec worldVec = mObjectToWorld * objVec;
 
 	if (debugMode)
@@ -207,9 +211,9 @@ void GameLoop()
 		const auto& p0 = model->pointList[tri.pointIndex[0]-1];
 		const auto& p1 = model->pointList[tri.pointIndex[1]-1];
 		const auto& p2 = model->pointList[tri.pointIndex[2]-1];
-		Vec P0 = transform(p0);
-		Vec P1 = transform(p1);
-		Vec P2 = transform(p2);
+		Vec P0 = transform(p0,moveVec,rotateXAng,rotateYAng,rotateZAng,scaleX,scaleY,scaleZ);
+		Vec P1 = transform(p1, moveVec, rotateXAng, rotateYAng, rotateZAng, scaleX, scaleY, scaleZ);
+		Vec P2 = transform(p2, moveVec, rotateXAng, rotateYAng, rotateZAng, scaleX, scaleY, scaleZ);
 
 		DrawTriangle(P0, P1, P2, Color(88, 178, 220));
 		//DrawTriangle(P0, P1, P2, randColorList[i]);
@@ -225,7 +229,7 @@ void GameLoop()
 
 	int nowFps= CalFPS();
 	char titleStr[50];
-	sprintf_s(titleStr, "FPS:%d", nowFps);
+	sprintf_s(titleStr, "FPS:%d camera pos (%.2f,%.2f,%.2f)", nowFps,eye.x,eye.y,eye.z);
 	SetTitle(titleStr);
 }
 
@@ -345,10 +349,23 @@ int main()
 	}
 	
 
-	if (1)
+	int loadModelId = 1;
+	switch (loadModelId)
+	{
+	case 0:
+		moveVec = { 4.5,5,0 };
 		model = loadModel("model/bunny.obj");
-	else
-		model = loadModel("model/cube.obj");
+		break;
+	case 1:
+		moveVec = { 0,5,0};
+			model = loadModel("model/cube.obj");
+			break;
+	default:
+		break;
+	}
+
+
+		
 
 
 
