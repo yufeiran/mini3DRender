@@ -10,27 +10,7 @@ bool debugMode = false;
 
 //======================================================
 
-Vec eye(5, 5, 0);
-Vec lookat(0, 5, 0);
-Vec up(0, 1, 0);
-
-Vec Forward = lookat - eye;
-Vec side;
-
-double viewAng = 45;
-double aspect = 4.0 / 3.0;
-double n = 1;
-double f = 30;
-
-double X0 = 0;
-double Y0 = 0;
-
-double width = 800;
-double height = 600;
-
-double Zmin = 0;
-double Zmax = 1;
-
+Camera camera;
 Model* model;
 vector<Vec>ansList;
 vector<pair<int, int>>lineList;
@@ -53,104 +33,7 @@ int cameraMoveForward = 0;
 int cameraMoveUp = 0;
 int cameraMoveSide = 0;
 
-Mat makeWorldToCameraMat(const Vec& Forward, const Vec& side, const Vec& up,const Vec&eye)
-{
-	//这里直接取“从世界到相机空间变换矩阵”的逆矩阵，推导请看https://yufeiran.com/cao-gao-zhi-shang-tui/ 2.3.2节
-	Mat mMoveR = makeMoveMat(-eye.x, -eye.y, -eye.z);
-	Mat mRotateR;
-	mRotateR.m[3][3] = 1;
-	for (int i = 0; i < 3; i++)
-	{
-		mRotateR.m[0][i] = side[i];
-		mRotateR.m[1][i] = up[i];
-		mRotateR.m[2][i] = -Forward[i];
-	}
-	return mRotateR * mMoveR;
-}
 
-Mat makeCameraToClipMat(const double viewAng, const double aspect, double n, double f)
-{
-	Mat m;
-	double radViewAng = degToRad(viewAng);
-	double cotViewAng = 1.0 / tan(radViewAng);
-	m.m[0][0] = cotViewAng / aspect;
-	m.m[1][1] = cotViewAng;
-	m.m[2][2] = f / (f - n);
-	m.m[2][3] = 1;
-	m.m[3][2] = f * n / (n - f);
-	return m;
-}
-
-
-Mat makeClipToScreenMat(const double x0, const double y0, const double width, const double height, const double Zmin, const double Zmax)
-{
-	Mat m;
-	m.m[0][0] = 0.5*width;
-	m.m[1][1] = -0.5*height;
-	m.m[2][2] = Zmax - Zmin;
-	m.m[3][3] = 1;
-	
-	m.m[0][3] = x0 + 0.5 * width;
-	m.m[1][3] = y0 + 0.5 * height;
-	m.m[2][3] = Zmin;
-	return m;
-}
-
-
-Vec transform(const Vec& objVec,const Vec&moveVec,const double rotateXAng ,const double rotateYAng,const double rotateZAng,const double  sx, const double sy, const double sz)
-{
-	if(debugMode)
-		cout << "raw :" << objVec <<endl<< " - > ";
-	// object to world
-	Mat mObjectToWorld;
-	mObjectToWorld = makeMoveMat(moveVec.x, moveVec.y, moveVec.z)*makeRotateByYMat(rotateYAng)* makeRotateByXMat(rotateXAng)*makeRotateByZMat(rotateZAng)* makeScaleMat(sx,sy,sz);
-	Vec worldVec = mObjectToWorld * objVec;
-
-	if (debugMode)
-		cout << "world :" << worldVec << endl << " - > ";
-	// world to Camera
-
-	Forward = lookat - eye;
-	Forward = Forward.normal();
-
-	up = up.normal();
-	
-	side = cross(Forward, up);
-
-	up = cross(side, Forward);
-
-	Mat mWorldToObject = makeWorldToCameraMat(Forward, side, up, eye);
-
-	Vec CameraVec = mWorldToObject * worldVec;
-
-	if (debugMode)
-		cout << "camera :" << CameraVec << endl << " - > ";
-
-	// Camera to Clip 
-	Mat mCameraToClip = makeCameraToClipMat(viewAng, aspect, n, f);
-	Vec ClipVec = mCameraToClip * CameraVec;
-
-	if (debugMode)
-		cout << "clip :" << ClipVec << endl << " - > ";
-
-	ClipVec.z = -ClipVec.z;
-	ClipVec.x /= ClipVec.w;
-	ClipVec.y /= ClipVec.w;
-	ClipVec.z /= ClipVec.w;
-	ClipVec.w = 1;
-
-	if (debugMode)
-		cout << "new clip :" << ClipVec << endl << " - > ";
-	// Clip to Screen
-	Mat mClipToScreen = makeClipToScreenMat(X0, Y0, width, height, Zmin, Zmax);
-	Vec ScreenVec = mClipToScreen * ClipVec;
-
-	if (debugMode)
-		cout << "screen :" << ScreenVec << endl;
-
-	return ScreenVec;
-
-}
 
 Vec Cube[8];
 const int randomColorSum = 1000;
@@ -171,31 +54,32 @@ void GameLoop()
 	if (rotateZStatus == 1)
 		rotateZAng += dAng * oneFrameTime;
 	if (cameraMoveForward==1) {
-		eye = eye + Forward * dMoveSize * oneFrameTime;
-		lookat = lookat + Forward * dMoveSize * oneFrameTime;
+		camera.eye = camera.eye + camera.Forward * dMoveSize * oneFrameTime;
+		camera.lookat = camera.lookat + camera.Forward * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveForward == -1) {
-		eye = eye - Forward * dMoveSize * oneFrameTime;
-		lookat = lookat - Forward * dMoveSize * oneFrameTime;
+		camera.eye = camera.eye - camera.Forward * dMoveSize * oneFrameTime;
+		camera.lookat = camera.lookat - camera.Forward * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveSide == 1) 
 	{
-		eye = eye - side * dMoveSize * oneFrameTime;
-		lookat = lookat - side * dMoveSize * oneFrameTime;
+		camera.eye = camera.eye - camera.side * dMoveSize * oneFrameTime;
+		camera.lookat = camera.lookat - camera.side * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveSide == -1) {
-		eye = eye + side * dMoveSize * oneFrameTime;
-		lookat = lookat + side * dMoveSize * oneFrameTime;
+		camera.eye = camera.eye + camera.side * dMoveSize * oneFrameTime;
+		camera.lookat = camera.lookat + camera.side * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveUp == 1) {
-		eye = eye + up * dMoveSize * oneFrameTime;
-		lookat = lookat + up * dMoveSize * oneFrameTime;
+		camera.eye = camera.eye + camera.up * dMoveSize * oneFrameTime;
+		camera.lookat = camera.lookat + camera.up * dMoveSize * oneFrameTime;
 	}
 	if (cameraMoveUp == -1) {
-		eye = eye - up * dMoveSize * oneFrameTime;
-		lookat = lookat - up * dMoveSize * oneFrameTime;
+		camera.eye = camera.eye - camera.up * dMoveSize * oneFrameTime;
+		camera.lookat = camera.lookat - camera.up * dMoveSize * oneFrameTime;
 	}
-
+	//每次改变完camera都要重新计算camera的数据
+	camera.update();
 	CleanScreen();
 
 	Vec v1 = { 50,150,0.5 }, v2 = { 10,50,0.5 }, v3 = { 100,50,0.4 },v4={10,10,0.3};
@@ -205,31 +89,13 @@ void GameLoop()
 	//DrawTriangle(v1, v2, v3,Color(203,64,66));
 	//DrawTriangle(v4, v2, v3, Color(88, 178, 220));
 	//DrawTriangle(v1, v4, v2, Color(88, 178, 220));
-	int i = 0;
-	for (const auto& tri : model->triangleList)
-	{
-		const auto& p0 = model->pointList[tri.pointIndex[0]-1];
-		const auto& p1 = model->pointList[tri.pointIndex[1]-1];
-		const auto& p2 = model->pointList[tri.pointIndex[2]-1];
-		Vec P0 = transform(p0,moveVec,rotateXAng,rotateYAng,rotateZAng,scaleX,scaleY,scaleZ);
-		Vec P1 = transform(p1, moveVec, rotateXAng, rotateYAng, rotateZAng, scaleX, scaleY, scaleZ);
-		Vec P2 = transform(p2, moveVec, rotateXAng, rotateYAng, rotateZAng, scaleX, scaleY, scaleZ);
-
-		DrawTriangle(P0, P1, P2, Color(88, 178, 220));
-		//DrawTriangle(P0, P1, P2, randColorList[i]);
-		i++;
-		if (i > randomColorSum)i = 0;
-		DrawLine(P0.x, P0.y, P0.z, P1.x, P1.y, P1.z);
-		DrawLine(P1.x, P1.y, P1.z, P2.x, P2.y, P2.z);
-		DrawLine(P2.x, P2.y, P2.z, P0.x, P0.y, P0.z);
-	}
-	
+	drawModel(camera, model, moveVec, rotateXAng, rotateYAng, rotateZAng, scaleX, scaleY, scaleZ);
 
 	PutBufferToScreen();
 
 	int nowFps= CalFPS();
 	char titleStr[50];
-	sprintf_s(titleStr, "FPS:%d camera pos (%.2f,%.2f,%.2f)", nowFps,eye.x,eye.y,eye.z);
+	sprintf_s(titleStr, "FPS:%d camera pos (%.2f,%.2f,%.2f)", nowFps,camera.eye.x, camera.eye.y, camera.eye.z);
 	SetTitle(titleStr);
 }
 
@@ -355,20 +221,17 @@ int main()
 	case 0:
 		moveVec = { 4.5,5,0 };
 		model = loadModel("model/bunny.obj");
+
 		break;
 	case 1:
 		moveVec = { 0,5,0};
-			model = loadModel("model/cube.obj");
-			break;
+		model = loadModel("model/cube.obj");
+		model->texture = loadTexture("model/yuki.jpg");
+		model->drawMode = TextureColor;
+		break;
 	default:
 		break;
 	}
-
-
-		
-
-
-
 	while (1)
 	{
 		updateFrame();

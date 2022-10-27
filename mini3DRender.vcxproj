@@ -127,13 +127,17 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="camera.cpp" />
     <ClCompile Include="device.cpp" />
+    <ClCompile Include="drawPipeline.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model.cpp" />
     <ClCompile Include="unit.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="camera.h" />
     <ClInclude Include="device.h" />
+    <ClInclude Include="drawPipeline.h" />
     <ClInclude Include="mini3DRender.h" />
     <ClInclude Include="model.h" />
     <ClInclude Include="stb_image.h" />

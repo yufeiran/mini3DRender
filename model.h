@@ -2,14 +2,78 @@
 #ifndef MODEL_H
 #define MODEL_H
 
-
 #include"unit.h"
+
 #include<vector>
 
+struct Texture;
+Texture* loadTexture(const char* filepath);
+struct Texture
+{
+	int width, height;
+	int channel;
+	unsigned char* data;
+	unsigned char getData(int x, int y) const {
+		return data[y * width + x];
+	}
+	Texture(const char* filepath)
+	{
+		auto t = loadTexture(filepath);
+		width = t->width;
+		height = t->height;
+		channel = t->channel;
+		data = t->data;
+	}
+	Texture()
+	{
+		width = 0;
+		height = 0;
+		channel = 0;
+		data = nullptr;
+	}
+	Texture(const Texture& t) {
+		width = t.width;
+		height = t.height;
+		channel = t.channel;
+
+		data = new unsigned char[width * height * channel];
+	}
+
+	~Texture()
+	{
+		if (data != nullptr) {
+			delete data;
+		}
+	}
+	Color getColor(double u, double v);
+};
+
+
+
+
+using UVPair = std::pair<double, double>;
+
+
+//模型绘制模式 分别是用纹理绘制、用纯色填充(也绘制线框)、只绘制线框
+enum ModelDrawMode {
+	TextureColor,FillColor,LineColor
+};
 struct Model
 {
-	std::vector<Vec>pointList;
-	std::vector<Triangle>triangleList;
+	std::vector<Vec>vList;
+	std::vector<UVPair>uvList;
+	std::vector<Vec>vnList; //顶点法向量
+	std::vector<Triangle>vIndexList;
+	std::vector<Triangle>uvIndexList;
+	std::vector<Triangle>vnIndexList;
+
+
+
+	ModelDrawMode drawMode = FillColor;
+	Texture* texture;
+	Color filColor{ 88, 178, 220 };
+	Color lineColor{ 255, 255, 255 };
+
 
 };
 

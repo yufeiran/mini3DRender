@@ -8,6 +8,22 @@
 //该头文件用来放置向量和矩阵的定义以及运算
 const double PI = 3.14159265359;
 
+class Color
+{
+public:
+	Color(int R, int G, int B) :r(R), g(G), b(B) {};
+	Color() :r(255), g(255), b(255) {};
+	Color& operator=(const Color& c) {
+		r = c.r;
+		g = c.g;
+		b = c.b;
+		return *this;
+	}
+	int r, g, b;
+};
+
+
+
 double degToRad(double ang);
 
 //默认向量都是竖着的，左乘矩阵进行变换
@@ -33,6 +49,13 @@ struct Vec
 	Vec normal() {
 		double diva = 1.0 / sqrt(x * x + y * y + z * z);
 		return Vec(x * diva, y * diva, z * diva, w);
+	}
+	Vec& operator=(const Vec& v) {
+		x = v.x;
+		y = v.y;
+		z = v.z;
+		return *this;
+
 	}
 	Vec operator+(const Vec& v)const {
 		return Vec(x + v.x, y + v.y, z + v.z, w);
@@ -123,15 +146,4 @@ struct Triangle
 	}
 };
 
-struct Texture
-{
-	int width, height;
-	int channel;
-	unsigned char* data;
-	unsigned char getData(int x, int y) const {
-		return data[y * width + x];
-	}
-};
-
-Texture loadTexture(const char* filepath);
 #endif // !UNIT_H
