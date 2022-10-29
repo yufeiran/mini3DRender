@@ -5,7 +5,7 @@
 
 using namespace std;
 
-bool debugMode = true;
+bool debugMode = false;
 //=======================================================
 
 //======================================================
@@ -215,7 +215,7 @@ int main()
 	}
 	
 
-	int loadModelId =2;
+	int loadModelId =1;
 	switch (loadModelId)
 	{
 	case 0:
@@ -232,7 +232,7 @@ int main()
 	case 2:
 		moveVec = { 2,5,0 };
 		model = loadModel("model/panel.obj");
-		model->texture = loadTexture("model/BlackAndWhite.jpg");
+		model->texture = loadTexture("model/yuki.jpg");
 		model->drawMode = TextureColor;
 		rotateYAng = 90;
 		break;

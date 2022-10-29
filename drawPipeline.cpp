@@ -26,8 +26,8 @@ Mat makeCameraToClipMat(const double viewAng, const double aspect, double n, dou
 	m.m[0][0] = cotViewAng / aspect;
 	m.m[1][1] = cotViewAng;
 	m.m[2][2] = f / (f - n);
-	m.m[2][3] = 1;
-	m.m[3][2] = f * n / (n - f);
+	m.m[2][3] = f * n / (n - f); 
+	m.m[3][2] = 1;
 	return m;
 }
 
@@ -91,7 +91,6 @@ Vec transformCameraToClip(const Camera& camera, const Vec& cameraVec)
 Vec perspectiveDivision(const Vec& clipHomogeneousVec)
 {
 	Vec clipVec = clipHomogeneousVec;
-	clipVec.z = -clipVec.z;
 	clipVec.x /= clipVec.w;
 	clipVec.y /= clipVec.w;
 	clipVec.z /= clipVec.w;
@@ -145,23 +144,33 @@ UVPair calUVByScreenPoint(const Vec& pOnScreen, const VPoint& vp1, const VPoint&
 
 
 
-	double oneOverPZ = pOnScreen.z;
-	double PZ = 1.0 / oneOverPZ;
+
+	double OneOverPz = (pOnScreen.z - camera.f / (camera.f - camera.n)) * (camera.n - camera.f) / (camera.f * camera.n);
+
+	double Pz = 1.0 / OneOverPz;
+
+
 	double N = camera.n;
+
+	double h = camera.n * tan(degToRad( camera.viewAng)); //裁剪空间前裁剪面的宽度
+	double w = h * camera.aspect; //裁剪空间前裁剪面的高度
 
 
 	//这里我们需要的是p在投影面上的坐标，所以要对p在屏幕上的坐标进行逆变换
+	Vec pOnClipCuboid;
 	Vec pOnClip;
 	Vec pOnCamera;
-	pOnClip.x = 2.0 * pOnScreen.x / camera.width - 1.0;
-	pOnClip.y = 2.0 * pOnScreen.y / camera.height - 1.0;
-	pOnClip.z = (PZ - camera.Zmin) / (camera.Zmax - camera.Zmin);
+	pOnClipCuboid.x = 2.0 * pOnScreen.x / camera.width - 1.0;
+	pOnClipCuboid.y =-(2.0 * pOnScreen.y / camera.height - 1.0);
+	pOnClipCuboid.z = (pOnScreen.z - camera.Zmin) / (camera.Zmax - camera.Zmin);
 
+	pOnClip.x = pOnClipCuboid.x * w;
+	pOnClip.y = pOnClipCuboid.y * h ;
+	pOnClip.z = camera.n;
 
-
-	pOnCamera.x = pOnClip.x * PZ / N;
-	pOnCamera.y = pOnClip.y * PZ / N;
-	pOnCamera.z = pOnClip.z;
+	pOnCamera.x = pOnClip.x * Pz / N;
+	pOnCamera.y = pOnClip.y * Pz / N;
+	pOnCamera.z = Pz;
 
 
 	Vec A = vp1.pointCamera, B = vp2.pointCamera, C = vp3.pointCamera;
@@ -170,32 +179,36 @@ UVPair calUVByScreenPoint(const Vec& pOnScreen, const VPoint& vp1, const VPoint&
 
 
 	double i = 0, j = 0, k = 0;
-	i = (-(B.y - C.y) * (P.x - C.x) + (B.x - C.x) * (P.y - C.y)) / 
-		((B.y - C.y) * (C.x - A.x) - (B.x - C.x) * (C.y - A.y));
 
-	j = (-(P.x - C.x) * (A.y - C.y) + (P.y - C.y) * (A.x - C.x)) /
-		((C.x - B.x) * (A.y - C.y) - (C.y - B.y) * (A.x - C.x));
+	double i_result_up = (-(B.y - C.y) * (P.x - C.x) + (B.x - C.x) * (P.y - C.y));
+	double i_result_bottom = ((B.y - C.y) * (C.x - A.x) - (B.x - C.x) * (C.y - A.y));;
+
+	if (i_result_bottom == 0)
+	{
+		cout << "devide by zero!" << endl;
+	}
+
+	i = i_result_up /
+		i_result_bottom;
+
+	double j_result_up = (-(P.x - C.x) * (A.y - C.y) + (P.y - C.y) * (A.x - C.x));
+	double j_result_bottom = ((C.x - B.x) * (A.y - C.y) - (C.y - B.y) * (A.x - C.x));
+
+	j = j_result_up /
+		j_result_bottom;
+
+	if (j_result_bottom == 0)
+	{
+		cout << "devide by zero!" << endl;
+	}
+
 
 	k = 1.0 - i - j;
 
 
-
-	//double zr = i * (1 / vp1.pointClipHomogeneous.w) + j * (1 / vp2.pointClipHomogeneous.w) + k * (1 / vp3.pointClipHomogeneous.w);
-
-	//double pz = i * A.z + j * B.z + k * C.z;
-
-	////屏幕上的重心坐标需要变换回原来在摄像机空间中的重心坐标
-	//i *= P.z / A.z;
-	//j *= P.z / B.z;
-	//k *= P.z / C.z;
-
 	UVPair uvP;
 	uvP.first = i * vp1.uv.first + j * vp2.uv.first + k * vp3.uv.first;
 	uvP.second = i * vp1.uv.second + j * vp2.uv.second + k * vp3.uv.second;
-
-
-	//uvP.first = (i * (vp1.uv.first / vp1.pointClipHomogeneous.w) + j * (vp2.uv.first / vp2.pointClipHomogeneous.w) + k * (vp3.uv.first / vp3.pointClipHomogeneous.w)) / zr;
-	//uvP.second = (i * (vp1.uv.second / vp1.pointClipHomogeneous.w) + j * (vp2.uv.second / vp2.pointClipHomogeneous.w) + k * (vp3.uv.second / vp3.pointClipHomogeneous.w)) / zr;
 	return uvP;
 }
 
@@ -684,7 +697,7 @@ void SwapByYValue(VPoint& v1, VPoint& v2, VPoint& v3)
 	//按y值从小到大排序3个顶点
 	VPoint V[3] = { v1,v2,v3 };
 	int maxIndex = 0, minIndex = 0;
-	VPoint maxV = v1, minV = v1, midV = v1;
+	VPoint maxV = v1, minV = v1, midV;
 	for (int i = 0; i < 3; i++)
 	{
 		if (V[i].pointScreen.y < minV.pointScreen.y)
@@ -692,7 +705,7 @@ void SwapByYValue(VPoint& v1, VPoint& v2, VPoint& v3)
 			minIndex = i;
 			minV = V[i];
 		}
-		if (V[i].pointScreen.y > maxV.pointScreen.y)
+		if (V[i].pointScreen.y >= maxV.pointScreen.y)
 		{
 			maxIndex = i;
 			maxV = V[i];
@@ -728,10 +741,13 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	const auto& p1World = tannsformObjToWorld(p1Object, moveVec, rotateXAng, rotateYAng, rotateZAng, sx, sy, sz);
 	const auto& p2World = tannsformObjToWorld(p2Object, moveVec, rotateXAng, rotateYAng, rotateZAng, sx, sy, sz);
 
-	const auto& p0Camera = transformWorldToCamera(camera, p0World);
-	const auto& p1Camera = transformWorldToCamera(camera, p1World);
-	const auto& p2Camera = transformWorldToCamera(camera, p2World);
+	 auto p0Camera = transformWorldToCamera(camera, p0World);
+	 auto p1Camera = transformWorldToCamera(camera, p1World);
+	 auto p2Camera = transformWorldToCamera(camera, p2World);
 
+	p0Camera.z = -p0Camera.z;
+	p1Camera.z = -p1Camera.z;
+	p2Camera.z = -p2Camera.z;
 
 	const auto& p0ClipHomogeneousVec = transformCameraToClip(camera, p0Camera);
 	const auto& p1ClipHomogeneousVec = transformCameraToClip(camera, p1Camera);
