@@ -215,7 +215,7 @@ int main()
 	}
 	
 
-	int loadModelId =1;
+	int loadModelId =2;
 	switch (loadModelId)
 	{
 	case 0:
@@ -226,7 +226,7 @@ int main()
 	case 1:
 		moveVec = { 0,5,0};
 		model = loadModel("model/cube.obj");
-		model->texture = loadTexture("model/yuki.jpg");
+		model->texture = loadTexture("model/BlackAndWhite.jpg");
 		model->drawMode = TextureColor;
 		break;
 	case 2:

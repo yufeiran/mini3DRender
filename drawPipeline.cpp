@@ -185,7 +185,8 @@ UVPair calUVByScreenPoint(const Vec& pOnScreen, const VPoint& vp1, const VPoint&
 
 	if (i_result_bottom == 0)
 	{
-		cout << "devide by zero!" << endl;
+		//cout << "devide by zero!" << endl;
+		return UVPair{ 0,0 };
 	}
 
 	i = i_result_up /
@@ -199,7 +200,8 @@ UVPair calUVByScreenPoint(const Vec& pOnScreen, const VPoint& vp1, const VPoint&
 
 	if (j_result_bottom == 0)
 	{
-		cout << "devide by zero!" << endl;
+		//cout << "devide by zero!" << endl;
+		return UVPair{ 0,0 };
 	}
 
 
