@@ -11,6 +11,7 @@ struct VPoint //用于最终绘制到屏幕上点的顶点结构
 
 extern int drawThreadSum;
 
+
 Mat makeWorldToCameraMat(const Vec& Forward, const Vec& side, const Vec& up, const Vec& eye);
 Mat makeCameraToClipMat(const double viewAng, const double aspect, double n, double f);
 Mat makeClipToScreenMat(const double x0, const double y0, const double width, const double height, const double Zmin, const double Zmax);
@@ -54,3 +55,4 @@ bool drawModel(const Camera& camera, const Model* model, const Vec& moveVec,
 	const double rotateXAng, const double rotateYAng, const double rotateZAng,
 	const double  sx, const double sy, const double sz);
 
+void setDrawThreadSum(int n);

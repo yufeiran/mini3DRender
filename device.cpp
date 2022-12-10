@@ -170,20 +170,17 @@ void SetTitle(const char* title)
 
 void CleanScreen()
 {
-	memset(buffer, 0, sizeof(char)* screenHeight*screenWidth*3);
+	//memset(buffer, 0, sizeof(char)* screenHeight*screenWidth*3);
 	memset(ZBuffer, 0, sizeof(double) * screenHeight * screenWidth );
-	//for (int y = 0; y < screenHeight; y++) {
-	//	for (int x = 0; x < screenWidth; x++) {
-	//		ZBuffer[y * screenWidth + x] = 1;
-	//	}
-	//}
-	//for (int y = 0; y < screenHeight; y++)
-	//{
-	//	for (int x = 0; x < screenWidth; x++)
-	//	{
-	//		buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 3] =0;
-	//		buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 2] = 0;
-	//		buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 1] = 0;
-	//	}
-	//}
+
+	for (int y = 0; y < screenHeight; y++)
+	{
+		for (int x = 0; x < screenWidth; x++)
+		{
+			double nowPart = 1-(double)y / (double)screenHeight;
+			buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 3] =177;
+			buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 2] = 150;
+			buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 1] = nowPart*147;
+		}
+	}
 }

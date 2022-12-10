@@ -397,3 +397,12 @@ FodyWeavers.xsd
 # JetBrains Rider
 *.sln.iml
 /model/雷电将军.mtl
+/model/low_poly_tree/Lowpoly_tree_sample.ZTL
+/model/low_poly_tree/Lowpoly_tree_sample.ZBP
+/model/low_poly_tree/Lowpoly_tree_sample.mtl
+/model/low_poly_tree/Lowpoly_tree_sample.max
+/model/low_poly_tree/Lowpoly_tree_sample.ma
+/model/low_poly_tree/Lowpoly_tree_sample.lxo
+/model/low_poly_tree/Lowpoly_tree_sample.fbx
+/model/low_poly_tree/Lowpoly_tree_sample.dae
+/model/low_poly_tree/Lowpoly_tree_sample.c4d

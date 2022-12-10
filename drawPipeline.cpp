@@ -4,6 +4,11 @@
 using namespace std;
 int drawThreadSum=6;
 
+void setDrawThreadSum(int n)
+{
+	drawThreadSum = n;
+}
+
 Mat makeWorldToCameraMat(const Vec& Forward, const Vec& side, const Vec& up, const Vec& eye)
 {
 	//这里直接取“从世界到相机空间变换矩阵”的逆矩阵，推导请看https://yufeiran.com/cao-gao-zhi-shang-tui/ 2.3.2节
@@ -763,7 +768,7 @@ bool checkIsPointInCuboid(const Vec& p)
 {
 	if (p.x < -1 || p.x>1)return false;
 	if (p.y < -1 || p.y>1)return false;
-	if (p.z < -1 || p.z >0)return false;
+	if (p.z < 0 || p.z >1)return false;
 	return true;
 }
 
@@ -788,6 +793,7 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	 auto p1Camera = transformWorldToCamera(camera, p1World);
 	 auto p2Camera = transformWorldToCamera(camera, p2World);
 
+
 	p0Camera.z = -p0Camera.z;
 	p1Camera.z = -p1Camera.z;
 	p2Camera.z = -p2Camera.z;
@@ -796,13 +802,19 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	const auto& p1ClipHomogeneousVec = transformCameraToClip(camera, p1Camera);
 	const auto& p2ClipHomogeneousVec = transformCameraToClip(camera, p2Camera);
 
-	if (checkIsPointInCuboid(p0ClipHomogeneousVec) == false)return;
-	if (checkIsPointInCuboid(p1ClipHomogeneousVec) == false)return;
-	if (checkIsPointInCuboid(p2ClipHomogeneousVec) == false)return;
+
+
 
 	const auto& p0Clip = perspectiveDivision(p0ClipHomogeneousVec);
 	const auto& p1Clip = perspectiveDivision(p1ClipHomogeneousVec);
 	const auto& p2Clip = perspectiveDivision(p2ClipHomogeneousVec);
+
+	if (checkIsPointInCuboid(p0Clip) == false)
+	{
+		return;
+	}
+	if (checkIsPointInCuboid(p1Clip) == false)return;
+	if (checkIsPointInCuboid(p2Clip) == false)return;
 
 	const auto& p0Screen = transformClipToScreen(camera, p0Clip);
 	const auto& p1Screen = transformClipToScreen(camera, p1Clip);

@@ -23,6 +23,10 @@ Model* loadModel(const char* filepath)
 		getline(infile, nowLineData);
 		if (nowLineData.empty())continue;
 		if (nowLineData[0] == '#')continue;
+		if (nowLineData == "mtllib")continue;
+		if (nowLineData == "usemtl")continue;
+		if (nowLineData == "g")continue;
+		if (nowLineData == "o")continue;
 		istringstream nowLineStream(nowLineData);
 		while (nowLineStream) {
 			string firstCmd;
@@ -44,52 +48,109 @@ Model* loadModel(const char* filepath)
 			//面
 			else if (firstCmd == "f")
 			{
-				string nowStr;
-				nowLineStream >> nowStr;
-				int IndexData[9];
-				int loadParamCount = 0;
+				vector<string>paramList;
+				while (nowLineStream) {
+					string temp;
+					nowLineStream >> temp;
+					if (temp == "")break;
+					paramList.push_back(temp);
+				}
 
-				if (nowStr.find('/') == std::string::npos)
+
+				//解析到的f 对于每个点的索引 
+				//paramIndex[0] 代表 v index ,[1] 代表 vt index ,[2]代表 vn index
+				int paramIndex[3][4];
+				bool hasVtIndex = false;
+				bool hasVnIndex = false;
+
+
+				for (int i = 0; i < paramList.size(); i++)
 				{
-					IndexData[0] = stoi(nowStr);
-					nowLineStream >> nowStr;
-					IndexData[1] = stoi(nowStr);
-					nowLineStream >> nowStr;
-					IndexData[2] = stoi(nowStr);
-					loadParamCount = 3;
-
-				}
-				else {
-					while (nowLineStream)
+					string& nowStr = paramList[i];
+					istringstream nowPointStr(nowStr);
+					int j = 0;
+					string tempStr;
+					while (getline(nowPointStr,tempStr,'/'))
 					{
-						istringstream nowStrStream(nowStr);
-
-						string tempStr;
-
-						// 面 按照 v/vt/vn 这样的排列方式给出
-						while (getline(nowStrStream, tempStr, '/'))
-						{
-							IndexData[loadParamCount] = stoi(tempStr);
-							loadParamCount++;
-						}
-						nowLineStream >> nowStr;
+						if (j == 1)hasVtIndex = true;
+						if (j == 2)hasVnIndex = true;
+						paramIndex[j][i] = stoi(tempStr);
+						j++;
 					}
-
 				}
 
+				int pointSum = paramList.size();
+
+				if (pointSum == 3)
+				{
+					m->vIndexList.push_back({ paramIndex[0][0],paramIndex[0][1],paramIndex[0][2] });
+					if (hasVtIndex) {
+						m->uvIndexList.push_back({ paramIndex[1][0],paramIndex[1][1],paramIndex[1][2] });
+					}
+					if (hasVnIndex) {
+						m->vnIndexList.push_back({ paramIndex[2][0],paramIndex[2][1],paramIndex[2][2] });
+					}
+				}
+				else if (pointSum == 4)
+				{
+					m->vIndexList.push_back({ paramIndex[0][0],paramIndex[0][1],paramIndex[0][2] });
+					m->vIndexList.push_back({ paramIndex[0][2],paramIndex[0][3],paramIndex[0][0] });
+					if (hasVtIndex) {
+						m->uvIndexList.push_back({ paramIndex[1][0],paramIndex[1][1],paramIndex[1][2] });
+						m->uvIndexList.push_back({ paramIndex[1][2],paramIndex[1][3],paramIndex[1][0] });
+					}
+					if (hasVnIndex) {
+						m->vnIndexList.push_back({ paramIndex[2][0],paramIndex[2][1],paramIndex[2][2] });
+						m->vnIndexList.push_back({ paramIndex[2][2],paramIndex[2][3],paramIndex[2][0] });
+					}
+				}
+
+				//string nowStr;
+				//nowLineStream >> nowStr;
+				//int IndexData[12];
+				//int loadParamCount = 0;
+
+				//if (nowStr.find('/') == std::string::npos)
+				//{
+				//	IndexData[0] = stoi(nowStr);
+				//	nowLineStream >> nowStr;
+				//	IndexData[1] = stoi(nowStr);
+				//	nowLineStream >> nowStr;
+				//	IndexData[2] = stoi(nowStr);
+				//	loadParamCount = 3;
+
+				//}
+				//else {
+				//	while (nowLineStream)
+				//	{
+				//		istringstream nowStrStream(nowStr);
+
+				//		string tempStr;
+
+				//		// 面 按照 v/vt/vn 这样的排列方式给出
+				//		while (getline(nowStrStream, tempStr, '/'))
+				//		{
+				//			IndexData[loadParamCount] = stoi(tempStr);
+				//			loadParamCount++;
+				//		}
+				//		nowLineStream >> nowStr;
+				//	}
+
+				//}
 
 
-				if (loadParamCount >= 3) {
-					m->vIndexList.push_back({ IndexData[0],IndexData[1],IndexData[2] });
-				}
-				if (loadParamCount >= 6) {
-					m->uvIndexList.push_back({ IndexData[3], IndexData[4], IndexData[5] });
-				}
-				if (loadParamCount == 9) {
-					m->vnIndexList.push_back({ IndexData[6],IndexData[7],IndexData[8] });
-				}
+
+				//if (loadParamCount >= 3) {
+				//	m->vIndexList.push_back({ IndexData[0],IndexData[1],IndexData[2] });
+				//}
+				//if (loadParamCount >= 6) {
+				//	m->uvIndexList.push_back({ IndexData[3], IndexData[4], IndexData[5] });
+				//}
+				//if (loadParamCount == 9) {
+				//	m->vnIndexList.push_back({ IndexData[6],IndexData[7],IndexData[8] });
+				//}
 			}
-			else continue;
+			else break;
 			if (!nowLineStream)break;
 		}
 	}

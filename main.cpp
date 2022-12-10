@@ -216,6 +216,8 @@ LRESULT CALLBACK WindowProc(
 int main()
 {
 	initWindow();
+
+	setDrawThreadSum(1);
 	
 	for (int i = 0; i < randomColorSum; i++)
 	{
@@ -223,7 +225,7 @@ int main()
 	}
 	
 
-	int loadModelId =3;
+	int loadModelId =1;
 	switch (loadModelId)
 	{
 	case 0:
@@ -232,7 +234,7 @@ int main()
 
 		break;
 	case 1:
-		moveVec = { 0,5,0};
+		moveVec = { 0,5,0 };
 		model = loadModel("model/cube.obj");
 		model->texture = loadTexture("model/BlackAndWhite.jpg");
 		model->drawMode = TextureColor;
@@ -246,7 +248,7 @@ int main()
 		break;
 	case 3:
 		moveVec = { 0,5,0 };
-		model = loadModel("model/DB9.obj");
+		model = loadModel("model/chair.obj");
 		break;
 	default:
 		break;
