@@ -9,7 +9,7 @@ struct VPoint //用于最终绘制到屏幕上点的顶点结构
 	UVPair uv;
 };
 
-
+extern int drawThreadSum;
 
 Mat makeWorldToCameraMat(const Vec& Forward, const Vec& side, const Vec& up, const Vec& eye);
 Mat makeCameraToClipMat(const double viewAng, const double aspect, double n, double f);

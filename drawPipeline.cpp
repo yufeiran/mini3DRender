@@ -1,7 +1,8 @@
 #include"drawPipeline.h"
 #include<iostream>
+#include<thread>
 using namespace std;
-
+int drawThreadSum=6;
 
 Mat makeWorldToCameraMat(const Vec& Forward, const Vec& side, const Vec& up, const Vec& eye)
 {
@@ -112,17 +113,14 @@ Vec transformClipToScreen(const Camera& camera, const Vec& clipVec)
 
 }
 
-
-
-bool drawModel(const Camera& camera, const Model* model,
-	const Vec& moveVec, const double rotateXAng, const double rotateYAng, 
+void drawModelSub(int threadID,int threadSum, const Camera& camera, const Model* model,
+	const Vec& moveVec, const double rotateXAng, const double rotateYAng,
 	const double rotateZAng, const double  sx, const double sy, const double sz)
 {
-
-	for (int i = 0; i < model->vIndexList.size(); i++)
+	for (int i = threadID; i < model->vIndexList.size(); i+= threadSum)
 	{
-		Triangle uvTri{-1,-1,-1},vnTri{-1,-1,-1};
-		if (i <model->uvIndexList.size())
+		Triangle uvTri{ -1,-1,-1 }, vnTri{ -1,-1,-1 };
+		if (i < model->uvIndexList.size())
 		{
 			uvTri = model->uvIndexList[i];
 		}
@@ -133,6 +131,37 @@ bool drawModel(const Camera& camera, const Model* model,
 		DrawTriangle(model->vIndexList[i], uvTri, vnTri,
 			model, camera, moveVec, rotateXAng, rotateYAng, rotateZAng, sx, sy, sz);
 	}
+}
+
+bool drawModel(const Camera& camera, const Model* model,
+	const Vec& moveVec, const double rotateXAng, const double rotateYAng, 
+	const double rotateZAng, const double  sx, const double sy, const double sz)
+{
+	vector<thread> threadVec;
+	for (int i = 0; i < drawThreadSum; i++)
+	{
+
+		threadVec.push_back(thread (drawModelSub ,i, drawThreadSum, camera, model,
+			moveVec, rotateXAng, rotateYAng, rotateZAng, sx, sy, sz ));
+	}
+	for (auto& s : threadVec)
+	{
+		s.join();
+	}
+	//for (int i = 0; i < model->vIndexList.size(); i++)
+	//{
+	//	Triangle uvTri{-1,-1,-1},vnTri{-1,-1,-1};
+	//	if (i <model->uvIndexList.size())
+	//	{
+	//		uvTri = model->uvIndexList[i];
+	//	}
+	//	if (i < model->vnIndexList.size())
+	//	{
+	//		vnTri = model->vnIndexList[i];
+	//	}
+	//	DrawTriangle(model->vIndexList[i], uvTri, vnTri,
+	//		model, camera, moveVec, rotateXAng, rotateYAng, rotateZAng, sx, sy, sz);
+	//}
 
 
 	return true;

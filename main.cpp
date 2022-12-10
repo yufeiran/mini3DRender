@@ -169,6 +169,14 @@ LRESULT CALLBACK WindowProc(
 			rotateZStatus = -1;
 		if (wParam == 'E')
 			rotateZStatus = 1;
+		if (wParam == 'M')
+		{
+			cout << "Enter Render Thread Sum:" << endl;
+			cout << ">";
+			int temp;
+			cin >> temp;
+			drawThreadSum = temp;
+		}
 
 		if (wParam == VK_UP) {
 			cameraMoveForward = 1;
@@ -215,7 +223,7 @@ int main()
 	}
 	
 
-	int loadModelId =2;
+	int loadModelId =0;
 	switch (loadModelId)
 	{
 	case 0:
