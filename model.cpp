@@ -74,21 +74,22 @@ Model* loadModel(const char* filepath)
 						}
 						nowLineStream >> nowStr;
 					}
-					
+
 				}
 
 
 
 				if (loadParamCount >= 3) {
-					m->vIndexList.push_back({ IndexData[0],IndexData[1],IndexData[2]});
+					m->vIndexList.push_back({ IndexData[0],IndexData[1],IndexData[2] });
 				}
 				if (loadParamCount >= 6) {
-					m->uvIndexList.push_back( { IndexData[3], IndexData[4], IndexData[5] });
+					m->uvIndexList.push_back({ IndexData[3], IndexData[4], IndexData[5] });
 				}
 				if (loadParamCount == 9) {
 					m->vnIndexList.push_back({ IndexData[6],IndexData[7],IndexData[8] });
 				}
 			}
+			else continue;
 			if (!nowLineStream)break;
 		}
 	}

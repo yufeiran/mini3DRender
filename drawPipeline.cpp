@@ -759,11 +759,23 @@ void SwapByYValue(VPoint& v1, VPoint& v2, VPoint& v3)
 	v3.pointScreen.x = (int)v3.pointScreen.x; v3.pointScreen.y = (int)v3.pointScreen.y;
 }
 
+bool checkIsPointInCuboid(const Vec& p)
+{
+	if (p.x < -1 || p.x>1)return false;
+	if (p.y < -1 || p.y>1)return false;
+	if (p.z < -1 || p.z >0)return false;
+	return true;
+}
+
 void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& vnTri,//对应的在模型中的坐标
 	const Model* model, const Camera& camera, const Vec& moveVec,
 	const double rotateXAng, const double rotateYAng, const double rotateZAng,
 	const double  sx, const double sy, const double sz)
 {
+
+	if (vTri.pointIndex[0] - 1 >= model->vList.size())return;
+	if (vTri.pointIndex[1] - 1 >= model->vList.size())return;
+	if (vTri.pointIndex[2] - 1 >= model->vList.size())return;
 	const auto& p0Object = model->vList[vTri.pointIndex[0] - 1];
 	const auto& p1Object = model->vList[vTri.pointIndex[1] - 1];
 	const auto& p2Object = model->vList[vTri.pointIndex[2] - 1];
@@ -783,6 +795,10 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	const auto& p0ClipHomogeneousVec = transformCameraToClip(camera, p0Camera);
 	const auto& p1ClipHomogeneousVec = transformCameraToClip(camera, p1Camera);
 	const auto& p2ClipHomogeneousVec = transformCameraToClip(camera, p2Camera);
+
+	if (checkIsPointInCuboid(p0ClipHomogeneousVec) == false)return;
+	if (checkIsPointInCuboid(p1ClipHomogeneousVec) == false)return;
+	if (checkIsPointInCuboid(p2ClipHomogeneousVec) == false)return;
 
 	const auto& p0Clip = perspectiveDivision(p0ClipHomogeneousVec);
 	const auto& p1Clip = perspectiveDivision(p1ClipHomogeneousVec);

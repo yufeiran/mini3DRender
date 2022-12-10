@@ -223,7 +223,7 @@ int main()
 	}
 	
 
-	int loadModelId =0;
+	int loadModelId =3;
 	switch (loadModelId)
 	{
 	case 0:
@@ -243,6 +243,10 @@ int main()
 		model->texture = loadTexture("model/yuki.jpg");
 		model->drawMode = TextureColor;
 		rotateYAng = 90;
+		break;
+	case 3:
+		moveVec = { 0,5,0 };
+		model = loadModel("model/DB9.obj");
 		break;
 	default:
 		break;
