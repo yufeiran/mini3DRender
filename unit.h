@@ -19,6 +19,16 @@ public:
 		b = c.b;
 		return *this;
 	}
+	Color& operator+(const Color& c) {
+		r += c.r;
+		g += c.g;
+		b += c.b;
+		if (r > 255)r = 255;
+		if (g > 255)g = 255;
+		if (b > 255)b = 255;
+
+		return *this;
+	}
 	int r, g, b;
 };
 
@@ -69,6 +79,9 @@ struct Vec
 	Vec operator*(double n) const {
 		return Vec(x * n, y * n, z * n, w);
 	}
+	double operator*(const Vec& v)const {
+		return x * v.x + y * v.y + z * v.z;
+	}
 	double& operator[](int index)
 	{
 		switch (index)
@@ -92,6 +105,10 @@ struct Vec
 		case 3:return w;
 			break;
 		}
+	}
+	const double len()const
+	{
+		return sqrt(x * x + y * y + z * z);
 	}
 };
 

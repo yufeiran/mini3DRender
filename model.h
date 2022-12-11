@@ -54,9 +54,9 @@ struct Texture
 using UVPair = std::pair<double, double>;
 
 
-//模型绘制模式 分别是用纹理绘制、用纯色填充(也绘制线框)、只绘制线框
+//模型绘制模式 分别是用纹理绘制(带线框)、只用纹理绘制、用纯色填充(也绘制线框)、只绘制线框
 enum ModelDrawMode {
-	TextureColor,FillColor,LineColor
+	TextureColorWithLine, TextureColor,FillColorWithLine, FillColor,LineColor
 };
 struct Model
 {
@@ -69,7 +69,7 @@ struct Model
 
 
 
-	ModelDrawMode drawMode = FillColor;
+	ModelDrawMode drawMode = FillColorWithLine;
 	Texture* texture;
 	Color filColor{ 88, 178, 220 };
 	Color lineColor{ 255, 255, 255 };

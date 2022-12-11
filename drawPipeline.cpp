@@ -138,10 +138,27 @@ void drawModelSub(int threadID,int threadSum, const Camera& camera, const Model*
 	}
 }
 
+
+void calLightVecPosInCamera(const Camera&camera)
+{
+
+	for (int i = 0; i < lightVec.size(); i++)
+	{
+		const auto& lightPosWorld = lightVec[i].posInWorld;
+		const auto& lightPosCamera = transformWorldToCamera(camera, lightPosWorld);
+		lightVec[i].posInCamera = lightPosCamera;
+
+	}
+
+}
+
 bool drawModel(const Camera& camera, const Model* model,
 	const Vec& moveVec, const double rotateXAng, const double rotateYAng, 
 	const double rotateZAng, const double  sx, const double sy, const double sz)
 {
+
+	calLightVecPosInCamera(camera);
+
 	vector<thread> threadVec;
 	for (int i = 0; i < drawThreadSum; i++)
 	{
@@ -173,12 +190,8 @@ bool drawModel(const Camera& camera, const Model* model,
 }
 
 
-UVPair calUVByScreenPoint(const Vec& pOnScreen, const VPoint& vp1, const VPoint& vp2, const VPoint& vp3, const Camera& camera)
+Vec getCameraPosFromScreenPoint(const Vec& pOnScreen, const Camera& camera)
 {
-
-
-
-
 	double OneOverPz = (pOnScreen.z - camera.f / (camera.f - camera.n)) * (camera.n - camera.f) / (camera.f * camera.n);
 
 	double Pz = 1.0 / OneOverPz;
@@ -186,7 +199,7 @@ UVPair calUVByScreenPoint(const Vec& pOnScreen, const VPoint& vp1, const VPoint&
 
 	double N = camera.n;
 
-	double h = camera.n * tan(degToRad( camera.viewAng)); //裁剪空间前裁剪面的宽度
+	double h = camera.n * tan(degToRad(camera.viewAng)); //裁剪空间前裁剪面的宽度
 	double w = h * camera.aspect; //裁剪空间前裁剪面的高度
 
 
@@ -195,16 +208,22 @@ UVPair calUVByScreenPoint(const Vec& pOnScreen, const VPoint& vp1, const VPoint&
 	Vec pOnClip;
 	Vec pOnCamera;
 	pOnClipCuboid.x = 2.0 * pOnScreen.x / camera.width - 1.0;
-	pOnClipCuboid.y =-(2.0 * pOnScreen.y / camera.height - 1.0);
+	pOnClipCuboid.y = -(2.0 * pOnScreen.y / camera.height - 1.0);
 	pOnClipCuboid.z = (pOnScreen.z - camera.Zmin) / (camera.Zmax - camera.Zmin);
 
 	pOnClip.x = pOnClipCuboid.x * w;
-	pOnClip.y = pOnClipCuboid.y * h ;
+	pOnClip.y = pOnClipCuboid.y * h;
 	pOnClip.z = camera.n;
 
 	pOnCamera.x = pOnClip.x * Pz / N;
 	pOnCamera.y = pOnClip.y * Pz / N;
 	pOnCamera.z = Pz;
+	return pOnCamera;
+}
+
+UVPair calUVByCameraPoint(const Vec& pOnCamera, const VPoint& vp1, const VPoint& vp2, const VPoint& vp3, const Camera& camera)
+{
+
 
 
 	Vec A = vp1.pointCamera, B = vp2.pointCamera, C = vp3.pointCamera;
@@ -659,6 +678,7 @@ void DrawLine(double x0, double y0, double z0, double x1, double y1, double z1, 
 
 void DrawScanLine(double x0, double z0, double x1, double z1, double y,
 	const VPoint& vp1, const VPoint& vp2, const VPoint& vp3,
+	const Vec& n, //三角形面法向量
 	const Model* model, const Camera& camera)
 {
 	if (x0 > x1) {
@@ -668,14 +688,52 @@ void DrawScanLine(double x0, double z0, double x1, double z1, double y,
 	for (int x = x0; x < x1; x++) {
 		double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
 		Color nowColor;
-		if (model->drawMode == TextureColor) {
-			UVPair nowUV = calUVByScreenPoint({ (double)x,y,(double)nowZ }, vp1, vp2, vp3,camera);
+		const Vec& pOnCamera = getCameraPosFromScreenPoint({ (double)x,y,(double)nowZ }, camera);
+		if (model->drawMode == TextureColorWithLine|| model->drawMode== TextureColor) {
+		
+			UVPair nowUV = calUVByCameraPoint(pOnCamera, vp1, vp2, vp3,camera);
 			nowColor = model->texture->getColor(nowUV.first, nowUV.second);
+			
+
+
 		}
 		else {
 			nowColor = model->filColor;
 		}
+		if (lightVec.empty() == false)
+		{
+			//开始计算光照
+			//L=La+Ld+Ls
+			// 这部分详情请参考 https://yufeiran.com/mini3drender-2/
+			// 
+			//light diffuse 漫反射
 
+			Vec I = (pOnCamera - lightVec[0].posInCamera).normal();
+			double kd = (double)(nowColor.r + nowColor.g + nowColor.b) / (double)(3 * 255);
+			double r = (pOnCamera - lightVec[0].posInCamera).len();
+			double Ld = kd * (lightVec[0].energy / (r * r)) * max(0, n * I);
+
+
+			//light specular 镜面反射
+			Vec viewerPos = { 0,0,0 };
+			Vec V = (viewerPos - pOnCamera).normal();
+			Vec h = (I + V).normal();
+
+			double ks = kd;
+			double p = 32;
+
+			double Ls = ks * (lightVec[0].energy / (r * r)) * pow(max(0, n * h), p);
+
+			//light Amibient 环境光
+			double ka = kd;
+			double Ia = 0.05;
+			double La = ka * Ia;
+
+			double L = min(1, Ls + Ld + La);
+
+			Color lightColor(L * lightVec[0].color.r, L * lightVec[0].color.g, L * lightVec[0].color.b);
+			nowColor = nowColor + lightColor;
+		}
 
 		DrawPoint(x, y, nowZ, nowColor);
 	}
@@ -684,19 +742,21 @@ void DrawScanLine(double x0, double z0, double x1, double z1, double y,
 
 void DrawTopFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3,
 	const VPoint& vp1, const VPoint& vp2, const VPoint& vp3,
-	const Model* model, const Camera& camera)
+	const Vec&n, //三角形面法向量
+	const Model* model, const Camera& camera
+	)
 {
 	double XL = v1.x, XR = v1.x;
 	double dX1 = -(v2.x - v1.x) / (v2.y - v1.y), dX2 = -(v3.x - v1.x) / (v3.y - v1.y);
 	double ZL = v1.z, ZR = v1.z;
 	double dZ1 = -(v2.z - v1.z) / (v2.y - v1.y), dZ2 = -(v3.z - v1.z) / (v3.y - v1.y);
 	if (round(v1.y) - round(v2.y) <= 1) {
-		DrawScanLine(XL, ZL, XR, ZR, round(v1.y), vp1, vp2, vp3, model,camera);
+		DrawScanLine(XL, ZL, XR, ZR, round(v1.y), vp1, vp2, vp3,n, model,camera);
 		return;
 	}
 	for (int y = round(v1.y); y > v2.y; y--)
 	{
-		DrawScanLine(XL, ZL, XR, ZR, y, vp1, vp2, vp3, model, camera);
+		DrawScanLine(XL, ZL, XR, ZR, y, vp1, vp2, vp3,n, model, camera);
 		XL += dX1;
 		XR += dX2;
 		ZL += dZ1;
@@ -706,6 +766,7 @@ void DrawTopFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3,
 
 void DrawBottomFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3,
 	const VPoint& vp1, const VPoint& vp2, const VPoint& vp3,
+	const Vec& n, //三角形面法向量
 	const Model* model, const Camera& camera)
 {
 
@@ -715,12 +776,12 @@ void DrawBottomFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3,
 	double ZL = v1.z, ZR = v1.z;
 	double dZ1 = (v2.z - v1.z) / (v2.y - v1.y), dZ2 = (v3.z - v1.z) / (v3.y - v1.y);
 	if (round(v2.y) - round(v1.y) <= 1) {
-		DrawScanLine(XL, ZL, XR, ZR, round(v1.y), vp1, vp2, vp3, model, camera);
+		DrawScanLine(XL, ZL, XR, ZR, round(v1.y), vp1, vp2, vp3,n, model, camera);
 		return;
 	}
 	for (int y = round(v1.y); y < v2.y; y++)
 	{
-		DrawScanLine(XL, ZL, XR, ZR, y, vp1, vp2, vp3, model, camera);
+		DrawScanLine(XL, ZL, XR, ZR, y, vp1, vp2, vp3,n, model, camera);
 		XL += dX1;
 		XR += dX2;
 		ZL += dZ1;
@@ -768,7 +829,7 @@ bool checkIsPointInCuboid(const Vec& p)
 {
 	if (p.x < -1 || p.x>1)return false;
 	if (p.y < -1 || p.y>1)return false;
-	if (p.z < 0 || p.z >1)return false;
+	//if (p.z < 0 || p.z >1)return false;
 	return true;
 }
 
@@ -821,12 +882,17 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	const auto& p2Screen = transformClipToScreen(camera, p2Clip);
 
 
+	if (model->drawMode == TextureColorWithLine || model->drawMode == FillColorWithLine || model->drawMode == LineColor)
+	{
+		DrawLine(p0Screen.x, p0Screen.y, p0Screen.z, p1Screen.x, p1Screen.y, p1Screen.z, model->lineColor);
+		DrawLine(p1Screen.x, p1Screen.y, p1Screen.z, p2Screen.x, p2Screen.y, p2Screen.z, model->lineColor);
+		DrawLine(p2Screen.x, p2Screen.y, p2Screen.z, p0Screen.x, p0Screen.y, p0Screen.z, model->lineColor);
+	}
 
-	DrawLine(p0Screen.x, p0Screen.y, p0Screen.z, p1Screen.x, p1Screen.y, p1Screen.z, model->lineColor);
-	DrawLine(p1Screen.x, p1Screen.y, p1Screen.z, p2Screen.x, p2Screen.y, p2Screen.z, model->lineColor);
-	DrawLine(p2Screen.x, p2Screen.y, p2Screen.z, p0Screen.x, p0Screen.y, p0Screen.z, model->lineColor);
-
-
+	//计算三角形面的法线
+	Vec v1 = p0Camera - p1Camera;
+	Vec v2 = p2Camera - p1Camera;
+	Vec n = cross(v1, v2).normal();
 
 
 	VPoint P[3];
@@ -860,10 +926,10 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	Vec V1 = P[0].pointScreen, V2 = P[1].pointScreen, V3 = P[2].pointScreen;
 
 	if (P[0].pointScreen.y == P[1].pointScreen.y) {
-		DrawTopFlatTriangle(V3, V1, V2, P[2], P[0], P[1], model, camera);
+		DrawTopFlatTriangle(V3, V1, V2, P[2], P[0], P[1],n, model, camera);
 	}
 	else if (P[1].pointScreen.y == P[2].pointScreen.y) {
-		DrawBottomFlatTriangle(V1, V3, V2, P[0], P[2], P[1], model, camera);
+		DrawBottomFlatTriangle(V1, V3, V2, P[0], P[2], P[1],n, model, camera);
 	}
 	else {
 		Vec V4;
@@ -871,9 +937,9 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 		V4.x = V1.x + (V4.y - V1.y) / (V3.y - V1.y) * (V3.x - V1.x);
 		V4.z = V1.z + (V4.y - V1.y) / (V3.y - V1.y) * (V3.z - V1.z);
 
-		DrawBottomFlatTriangle(V1, V2, V4, P[0], P[1], P[2], model, camera);
-		DrawScanLine(V2.x, V2.z, V4.x, V4.z, V2.y, P[0], P[1], P[2], model, camera);
-		DrawTopFlatTriangle(V3, V2, V4, P[2], P[1], P[0], model, camera);
+		DrawBottomFlatTriangle(V1, V2, V4, P[0], P[1], P[2],n, model, camera);
+		DrawScanLine(V2.x, V2.z, V4.x, V4.z, V2.y, P[0], P[1], P[2],n, model, camera);
+		DrawTopFlatTriangle(V3, V2, V4, P[2], P[1], P[0],n, model, camera);
 
 	}
 

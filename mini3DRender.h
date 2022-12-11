@@ -6,6 +6,7 @@
 #include"model.h"
 #include"device.h"
 #include"drawPipeline.h"
+#include"light.h"
 
 
 extern bool debugMode;

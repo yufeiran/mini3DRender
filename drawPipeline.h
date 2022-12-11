@@ -29,7 +29,7 @@ Vec perspectiveDivision(const Vec& clipHomogeneousVec);
 Vec transformClipToScreen(const Camera& camera, const Vec& clipVec);
 
 
-UVPair calUVByScreenPoint(const Vec& pOnScreen, const VPoint& vp1, const VPoint& vp2, const VPoint& vp3, const Camera& camera);
+UVPair calUVByCameraPoint(const Vec& pOnScreen, const VPoint& vp1, const VPoint& vp2, const VPoint& vp3, const Camera& camera);
 
 
 
@@ -37,13 +37,16 @@ void DrawLine(double x0, double y0, double z0, double x1, double y1, double z1, 
 
 void DrawScanLine(double x0, double z0, double x1, double z1, double y,
 	const VPoint& vp1, const VPoint& vp2, const VPoint& vp3,
+	const Vec&n, //三角形面法向量
 	const Model* model,const Camera&camera);
 
 void DrawTopFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3,
 	const VPoint& vp1, const VPoint& vp2, const VPoint& vp3,
+	const Vec&n, //三角形面法向量
 	const Model* model, const Camera& camera);
 void DrawBottomFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3,
 	const VPoint& vp1, const VPoint& vp2, const VPoint& vp3,
+	const Vec&n, //三角形面法向量
 	const Model* model, const Camera& camera);
 
 void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& vnTri,//对应的在模型中的坐标

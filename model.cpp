@@ -176,7 +176,7 @@ Color Texture::getColor(double u, double v)
 	if (u > 1)u = 1;
 	//u = 1.0 - u;
 	//v = 1.0 - v;
-	int x = u * width, y = v * height;
+	int x = u * (width-1), y = v * (height-1);
 	int index = y * width + x;
 	return Color(data[index * channel], data[index * channel + 1], data[index * channel + 2]);
 

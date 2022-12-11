@@ -1,7 +1,7 @@
-
+#include<vector>
 #include"mini3DRender.h"
 
-#include<vector>
+
 
 using namespace std;
 
@@ -33,7 +33,7 @@ int cameraMoveForward = 0;
 int cameraMoveUp = 0;
 int cameraMoveSide = 0;
 
-
+int tempLightDir = 1;
 
 Vec Cube[8];
 const int randomColorSum = 1000;
@@ -81,6 +81,13 @@ void GameLoop()
 	//每次改变完camera都要重新计算camera的数据
 	camera.update();
 	CleanScreen();
+
+	lightVec[0].posInWorld.y +=tempLightDir* 0.1;
+	if (lightVec[0].posInWorld.y > 10|| lightVec[0].posInWorld.y<-10)
+	{
+		tempLightDir = -tempLightDir;
+	}
+
 
 	Vec v1 = { 50,150,0.5 }, v2 = { 10,50,0.5 }, v3 = { 100,50,0.4 },v4={10,10,0.3};
 	// DrawTopFlatTriangle(v1, v2, v3, Color(203, 64, 66));
@@ -217,7 +224,14 @@ int main()
 {
 	initWindow();
 
-	setDrawThreadSum(1);
+	setDrawThreadSum(6);
+
+	Light L;
+	L.color = { 255,255,255 };
+	L.energy = 50;
+	L.posInWorld = { 10,10,0 };
+	lightVec.push_back(L);
+
 	
 	for (int i = 0; i < randomColorSum; i++)
 	{
@@ -225,25 +239,26 @@ int main()
 	}
 	
 
-	int loadModelId =1;
+	int loadModelId =0;
 	switch (loadModelId)
 	{
 	case 0:
 		moveVec = { 4.5,5,0 };
 		model = loadModel("model/bunny.obj");
+		model->drawMode = FillColor;
 
 		break;
 	case 1:
 		moveVec = { 0,5,0 };
 		model = loadModel("model/cube.obj");
-		model->texture = loadTexture("model/BlackAndWhite.jpg");
+		model->texture = loadTexture("model/wood.jpg");
 		model->drawMode = TextureColor;
 		break;
 	case 2:
 		moveVec = { 2,5,0 };
 		model = loadModel("model/panel.obj");
 		model->texture = loadTexture("model/yuki.jpg");
-		model->drawMode = TextureColor;
+		model->drawMode = TextureColorWithLine;
 		rotateYAng = 90;
 		break;
 	case 3:
