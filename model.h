@@ -1,10 +1,11 @@
 #pragma once
 #ifndef MODEL_H
 #define MODEL_H
-
+#include<vector>
+#include<string>
 #include"unit.h"
 
-#include<vector>
+
 
 struct Texture;
 Texture* loadTexture(const char* filepath);
@@ -74,11 +75,13 @@ struct Model
 	Color filColor{ 88, 178, 220 };
 	Color lineColor{ 255, 255, 255 };
 
-
+	bool isNeedCVVCut = true;
+	int id;
+	std::string name;
 };
 
-Model* loadModel(const char* filepath);
+Model* loadModel(const char* filepath, const char* name = 0);
 
-
-
+Model* getModelByName(const char* name);
+extern std::vector<Model*>modelVec;
 #endif // !MODEL_H

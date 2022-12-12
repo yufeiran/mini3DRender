@@ -152,6 +152,14 @@ void calLightVecPosInCamera(const Camera&camera)
 
 }
 
+bool drawSprite(const Camera& camera, const Sprite& sprite)
+{
+	return drawModel(camera, sprite.model, sprite.moveVec,
+		sprite.rotateXAng, sprite.rotateYAng, sprite.rotateZAng,
+		sprite.scaleX, sprite.scaleY, sprite.scaleZ);
+
+}
+
 bool drawModel(const Camera& camera, const Model* model,
 	const Vec& moveVec, const double rotateXAng, const double rotateYAng, 
 	const double rotateZAng, const double  sx, const double sy, const double sz)
@@ -681,11 +689,14 @@ void DrawScanLine(double x0, double z0, double x1, double z1, double y,
 	const Vec& n, //三角形面法向量
 	const Model* model, const Camera& camera)
 {
+
+	if (y < 0 || y > screenHeight)return;
 	if (x0 > x1) {
 		swap(x0, x1);
 		swap(z0, z1);
 	}
-	for (int x = x0; x < x1; x++) {
+
+	for (int x = max(0,x0); x < min(x1,screenWidth); x++) {
 		double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
 		Color nowColor;
 		const Vec& pOnCamera = getCameraPosFromScreenPoint({ (double)x,y,(double)nowZ }, camera);
@@ -754,7 +765,7 @@ void DrawTopFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3,
 		DrawScanLine(XL, ZL, XR, ZR, round(v1.y), vp1, vp2, vp3,n, model,camera);
 		return;
 	}
-	for (int y = round(v1.y); y > v2.y; y--)
+	for (int y = round(v1.y); y >= v2.y; y--)
 	{
 		DrawScanLine(XL, ZL, XR, ZR, y, vp1, vp2, vp3,n, model, camera);
 		XL += dX1;
@@ -779,7 +790,7 @@ void DrawBottomFlatTriangle(const Vec& v1, const Vec& v2, const Vec& v3,
 		DrawScanLine(XL, ZL, XR, ZR, round(v1.y), vp1, vp2, vp3,n, model, camera);
 		return;
 	}
-	for (int y = round(v1.y); y < v2.y; y++)
+	for (int y = round(v1.y); y <= v2.y; y++)
 	{
 		DrawScanLine(XL, ZL, XR, ZR, y, vp1, vp2, vp3,n, model, camera);
 		XL += dX1;
@@ -827,8 +838,8 @@ void SwapByYValue(VPoint& v1, VPoint& v2, VPoint& v3)
 
 bool checkIsPointInCuboid(const Vec& p)
 {
-	if (p.x < -1 || p.x>1)return false;
-	if (p.y < -1 || p.y>1)return false;
+	if (p.x < -1.2 || p.x>1.2)return false;
+	if (p.y < -1.2 || p.y>1.2)return false;
 	//if (p.z < 0 || p.z >1)return false;
 	return true;
 }
@@ -870,12 +881,13 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	const auto& p1Clip = perspectiveDivision(p1ClipHomogeneousVec);
 	const auto& p2Clip = perspectiveDivision(p2ClipHomogeneousVec);
 
-	if (checkIsPointInCuboid(p0Clip) == false)
+	if (model->isNeedCVVCut == true)
 	{
-		return;
+		if (checkIsPointInCuboid(p0Clip) == false)return;
+		if (checkIsPointInCuboid(p1Clip) == false)return;
+		if (checkIsPointInCuboid(p2Clip) == false)return;
 	}
-	if (checkIsPointInCuboid(p1Clip) == false)return;
-	if (checkIsPointInCuboid(p2Clip) == false)return;
+
 
 	const auto& p0Screen = transformClipToScreen(camera, p0Clip);
 	const auto& p1Screen = transformClipToScreen(camera, p1Clip);

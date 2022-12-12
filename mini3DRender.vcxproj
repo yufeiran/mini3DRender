@@ -133,6 +133,7 @@
     <ClCompile Include="light.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="model.cpp" />
+    <ClCompile Include="sprite.cpp" />
     <ClCompile Include="unit.cpp" />
   </ItemGroup>
   <ItemGroup>
@@ -142,6 +143,7 @@
     <ClInclude Include="light.h" />
     <ClInclude Include="mini3DRender.h" />
     <ClInclude Include="model.h" />
+    <ClInclude Include="sprite.h" />
     <ClInclude Include="stb_image.h" />
     <ClInclude Include="unit.h" />
   </ItemGroup>

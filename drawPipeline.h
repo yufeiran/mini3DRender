@@ -58,4 +58,6 @@ bool drawModel(const Camera& camera, const Model* model, const Vec& moveVec,
 	const double rotateXAng, const double rotateYAng, const double rotateZAng,
 	const double  sx, const double sy, const double sz);
 
+bool drawSprite(const Camera& camera, const Sprite& sprite);
+
 void setDrawThreadSum(int n);

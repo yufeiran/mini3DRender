@@ -6,9 +6,20 @@
 #include"stb_image.h"
 using namespace std;
 
+vector<Model*>modelVec;
 
+Model* getModelByName(const char* name)
+{
+	for (auto& m : modelVec)
+	{
+		if (m->name == name)
+		{
+			return m;
+		}
+	}
+}
 
-Model* loadModel(const char* filepath)
+Model* loadModel(const char* filepath,const char*name)
 {
 	ifstream infile(filepath);
 	auto m = new Model;
@@ -16,7 +27,11 @@ Model* loadModel(const char* filepath)
 	if (infile.is_open() == false)
 		throw("loadModel error");
 
-	
+	if (name != NULL)
+	{
+		m->name = name;
+	}
+
 	string nowLineData;
 
 	while (infile) {

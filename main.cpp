@@ -33,7 +33,7 @@ int cameraMoveForward = 0;
 int cameraMoveUp = 0;
 int cameraMoveSide = 0;
 
-int tempLightDir = 1;
+double tempLightAng = 0;
 
 Vec Cube[8];
 const int randomColorSum = 1000;
@@ -82,11 +82,14 @@ void GameLoop()
 	camera.update();
 	CleanScreen();
 
-	lightVec[0].posInWorld.y +=tempLightDir* 0.1;
-	if (lightVec[0].posInWorld.y > 10|| lightVec[0].posInWorld.y<-10)
-	{
-		tempLightDir = -tempLightDir;
-	}
+
+	//围绕(0,y,0)旋转点光源
+
+	tempLightAng+=0.1;
+
+	double LightR = 2;
+	lightVec[0].posInWorld.y = cos(tempLightAng) * LightR;
+	lightVec[0].posInWorld.z = sin(tempLightAng) * LightR;
 
 
 	Vec v1 = { 50,150,0.5 }, v2 = { 10,50,0.5 }, v3 = { 100,50,0.4 },v4={10,10,0.3};
@@ -96,7 +99,11 @@ void GameLoop()
 	//DrawTriangle(v1, v2, v3,Color(203,64,66));
 	//DrawTriangle(v4, v2, v3, Color(88, 178, 220));
 	//DrawTriangle(v1, v4, v2, Color(88, 178, 220));
-	drawModel(camera, model, moveVec, rotateXAng, rotateYAng, rotateZAng, scaleX, scaleY, scaleZ);
+	//drawModel(camera, model, moveVec, rotateXAng, rotateYAng, rotateZAng, scaleX, scaleY, scaleZ);
+	for (const auto& s : spriteVec)
+	{
+		drawSprite(camera, s);
+	}
 
 	PutBufferToScreen();
 
@@ -228,8 +235,8 @@ int main()
 
 	Light L;
 	L.color = { 255,255,255 };
-	L.energy = 50;
-	L.posInWorld = { 10,10,0 };
+	L.energy = 30;
+	L.posInWorld = { 10,0,0 };
 	lightVec.push_back(L);
 
 	
@@ -237,34 +244,77 @@ int main()
 	{
 		randColorList[i] = Color(rand() % 256, rand() % 256, rand() % 256);
 	}
-	
 
-	int loadModelId =0;
+	Model* mBunny = loadModel("model/bunny.obj");
+	mBunny->drawMode = FillColor;
+	Model* mCube = loadModel("model/cube.obj");
+	mCube->texture=loadTexture("model/wood.jpg");
+	mCube->drawMode= TextureColor;
+	Model* mGround = loadModel("model/Ground.obj");
+	mGround->texture = loadTexture("model/green.png");
+	mGround->drawMode = TextureColor;
+	mGround->isNeedCVVCut = false;
+
+
+	modelVec.push_back(mBunny);
+	modelVec.push_back(mCube);
+	modelVec.push_back(mGround);
+
+	Sprite sBunny;
+	sBunny.model = mBunny;
+	sBunny.moveVec = { 0,0,0 };
+
+	Sprite sBunny1 = sBunny;
+	sBunny1.moveVec = { 1,0,0 };
+
+	Sprite sCube;
+	sCube.model = mCube;
+	sCube.moveVec = { 0,0,0 };
+
+	Sprite sGround;
+	sGround.model = mGround;
+	sGround.moveVec = { -0.2,0,0 };
+	sGround.scaleX = 0.1;
+	sGround.scaleY = 0.1;
+	sGround.scaleZ= 0.1;
+	spriteVec.push_back(sBunny);
+	//spriteVec.push_back(sBunny1);
+	//spriteVec.push_back(sCube);
+	spriteVec.push_back(sGround);
+
+	int loadModelId =4;
 	switch (loadModelId)
 	{
 	case 0:
-		moveVec = { 4.5,5,0 };
+		moveVec = { 0,0,0 };
 		model = loadModel("model/bunny.obj");
 		model->drawMode = FillColor;
 
 		break;
 	case 1:
-		moveVec = { 0,5,0 };
+		moveVec = { 0,0,0 };
 		model = loadModel("model/cube.obj");
 		model->texture = loadTexture("model/wood.jpg");
 		model->drawMode = TextureColor;
 		break;
 	case 2:
-		moveVec = { 2,5,0 };
+		moveVec = { 2,0,0 };
 		model = loadModel("model/panel.obj");
 		model->texture = loadTexture("model/yuki.jpg");
 		model->drawMode = TextureColorWithLine;
 		rotateYAng = 90;
 		break;
 	case 3:
-		moveVec = { 0,5,0 };
+		moveVec = { 70,0,0 };
 		model = loadModel("model/chair.obj");
 		break;
+	case 4:
+		moveVec = { -2,-3,0 };
+		model = loadModel("model/Ground.obj");
+		model->texture = loadTexture("model/green.png");
+		model->drawMode = TextureColorWithLine;
+		break;
+
 	default:
 		break;
 	}
