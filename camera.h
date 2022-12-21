@@ -1,5 +1,9 @@
 #pragma once
 #include"unit.h"
+
+enum CameraMode {
+	FPSCameraMode,SurroundCameraMode
+};
 struct Camera
 {
 	Vec eye=Vec(2.5, 1.2, 0);
@@ -23,5 +27,15 @@ struct Camera
 	double Zmin = 0;
 	double Zmax = 1;
 
+
+	CameraMode cameraMode = SurroundCameraMode;
+
+	double surroundCameraTheta = 90;
+	double surroundCameraPhi = 0;
+	double surroundCameraR = 1.5;
+
 	void update();
+
+	void updateFPSCameraMode();
+	void updateSurroundCameraMode();
 };

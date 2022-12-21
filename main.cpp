@@ -41,43 +41,47 @@ Color randColorList[randomColorSum];
 
 void GameLoop()
 {
-	if (rotateYStatus == -1)
-		rotateYAng -= dAng*oneFrameTime;
-	if (rotateYStatus == 1)
-		rotateYAng += dAng * oneFrameTime;
-	if (rotateXStatus == -1)
-		rotateXAng -= dAng * oneFrameTime;
-	if (rotateXStatus == 1)
-		rotateXAng += dAng * oneFrameTime;
-	if (rotateZStatus == -1)
-		rotateZAng -= dAng * oneFrameTime;
-	if (rotateZStatus == 1)
-		rotateZAng += dAng * oneFrameTime;
-	if (cameraMoveForward==1) {
-		camera.eye = camera.eye + camera.Forward * dMoveSize * oneFrameTime;
-		camera.lookat = camera.lookat + camera.Forward * dMoveSize * oneFrameTime;
-	}
-	if (cameraMoveForward == -1) {
-		camera.eye = camera.eye - camera.Forward * dMoveSize * oneFrameTime;
-		camera.lookat = camera.lookat - camera.Forward * dMoveSize * oneFrameTime;
-	}
-	if (cameraMoveSide == 1) 
+	if (camera.cameraMode == FPSCameraMode)
 	{
-		camera.eye = camera.eye - camera.side * dMoveSize * oneFrameTime;
-		camera.lookat = camera.lookat - camera.side * dMoveSize * oneFrameTime;
+		if (rotateYStatus == -1)
+			rotateYAng -= dAng * oneFrameTime;
+		if (rotateYStatus == 1)
+			rotateYAng += dAng * oneFrameTime;
+		if (rotateXStatus == -1)
+			rotateXAng -= dAng * oneFrameTime;
+		if (rotateXStatus == 1)
+			rotateXAng += dAng * oneFrameTime;
+		if (rotateZStatus == -1)
+			rotateZAng -= dAng * oneFrameTime;
+		if (rotateZStatus == 1)
+			rotateZAng += dAng * oneFrameTime;
+		if (cameraMoveForward == 1) {
+			camera.eye = camera.eye + camera.Forward * dMoveSize * oneFrameTime;
+			camera.lookat = camera.lookat + camera.Forward * dMoveSize * oneFrameTime;
+		}
+		if (cameraMoveForward == -1) {
+			camera.eye = camera.eye - camera.Forward * dMoveSize * oneFrameTime;
+			camera.lookat = camera.lookat - camera.Forward * dMoveSize * oneFrameTime;
+		}
+		if (cameraMoveSide == 1)
+		{
+			camera.eye = camera.eye - camera.side * dMoveSize * oneFrameTime;
+			camera.lookat = camera.lookat - camera.side * dMoveSize * oneFrameTime;
+		}
+		if (cameraMoveSide == -1) {
+			camera.eye = camera.eye + camera.side * dMoveSize * oneFrameTime;
+			camera.lookat = camera.lookat + camera.side * dMoveSize * oneFrameTime;
+		}
+		if (cameraMoveUp == 1) {
+			camera.eye = camera.eye + camera.up * dMoveSize * oneFrameTime;
+			camera.lookat = camera.lookat + camera.up * dMoveSize * oneFrameTime;
+		}
+		if (cameraMoveUp == -1) {
+			camera.eye = camera.eye - camera.up * dMoveSize * oneFrameTime;
+			camera.lookat = camera.lookat - camera.up * dMoveSize * oneFrameTime;
+		}
 	}
-	if (cameraMoveSide == -1) {
-		camera.eye = camera.eye + camera.side * dMoveSize * oneFrameTime;
-		camera.lookat = camera.lookat + camera.side * dMoveSize * oneFrameTime;
-	}
-	if (cameraMoveUp == 1) {
-		camera.eye = camera.eye + camera.up * dMoveSize * oneFrameTime;
-		camera.lookat = camera.lookat + camera.up * dMoveSize * oneFrameTime;
-	}
-	if (cameraMoveUp == -1) {
-		camera.eye = camera.eye - camera.up * dMoveSize * oneFrameTime;
-		camera.lookat = camera.lookat - camera.up * dMoveSize * oneFrameTime;
-	}
+	
 	//每次改变完camera都要重新计算camera的数据
 	camera.update();
 	CleanScreen();
@@ -85,7 +89,7 @@ void GameLoop()
 
 	//围绕(0,y,0)旋转点光源
 
-	tempLightAng+=0.1;
+	//tempLightAng+=0.1;
 
 	double LightR = 2;
 	lightVec[0].posInWorld.y = cos(tempLightAng) * LightR;
@@ -131,58 +135,113 @@ LRESULT CALLBACK WindowProc(
 	}
 	case WM_KEYUP:
 	{
-		if (wParam == 'A')
-			rotateYStatus = 0;
-		if (wParam == 'D')
-			rotateYStatus = 0;
-		if (wParam == 'W')
-			rotateXStatus = 0;
-		if (wParam == 'S')
-			rotateXStatus = 0;
-		if (wParam == 'Q')
-			rotateZStatus = 0;
-		if (wParam == 'E')
-			rotateZStatus = 0;
-
-		if (wParam == VK_UP) {
-			cameraMoveForward = 0;
-		}
-		else if (wParam == VK_DOWN) {
-			cameraMoveForward = 0;
-		}
-		if (wParam == VK_LEFT)
+		if (camera.cameraMode == FPSCameraMode)
 		{
-			cameraMoveSide = 0;
+			if (wParam == 'A')
+				rotateYStatus = 0;
+			if (wParam == 'D')
+				rotateYStatus = 0;
+			if (wParam == 'W')
+				rotateXStatus = 0;
+			if (wParam == 'S')
+				rotateXStatus = 0;
+			if (wParam == 'Q')
+				rotateZStatus = 0;
+			if (wParam == 'E')
+				rotateZStatus = 0;
 
+			if (wParam == VK_UP) {
+				cameraMoveForward = 0;
+			}
+			else if (wParam == VK_DOWN) {
+				cameraMoveForward = 0;
+			}
+			if (wParam == VK_LEFT)
+			{
+				cameraMoveSide = 0;
+			}
+			else if (wParam == VK_RIGHT) {
+				cameraMoveSide = 0;
+			}
+			if (wParam == VK_PRIOR) {
+				cameraMoveUp = 0;
+			}
+			else if (wParam == VK_NEXT) {
+				cameraMoveUp = 0;
+			}
 		}
-		else if (wParam == VK_RIGHT) {
-			cameraMoveSide = 0;
-		}
-		if (wParam == VK_PRIOR) {
-			cameraMoveUp = 0;
-		}
-		else if (wParam == VK_NEXT) {
-			cameraMoveUp = 0;
-		}
+
+
 		break;
 	}
 	case WM_KEYDOWN:
 	{
+		if (camera.cameraMode == SurroundCameraMode)
+		{
+
+			if (wParam == 'W')
+				camera.surroundCameraR -= 0.3;
+			if (wParam == 'S')
+				camera.surroundCameraR += 0.3;
+			//if (wParam == 'A')
+			//	camera.surroundCameraPhi -= 1;
+			//if (wParam == 'D')
+			//	camera.surroundCameraPhi += 1;
+			//if (wParam == 'Q')
+			//	camera.surroundCameraTheta -= 1;
+			//if (wParam == 'E')
+			//	camera.surroundCameraTheta += 1;
+			if (wParam == 'A')
+				camera.surroundCameraTheta -= 1;
+				
+			if (wParam == 'D')
+				camera.surroundCameraTheta += 1;
+			if (wParam == 'Q')
+				camera.surroundCameraPhi -= 1;
+			if (wParam == 'E')
+				camera.surroundCameraPhi += 1;
+
+		}
+		if (camera.cameraMode == FPSCameraMode)
+		{
+			if (wParam == 'A')
+				rotateYStatus = -1;
+			if (wParam == 'D')
+				rotateYStatus = 1;
+			if (wParam == 'W')
+				rotateXStatus = -1;
+			if (wParam == 'S')
+				rotateXStatus = 1;
+			if (wParam == 'Q')
+				rotateZStatus = -1;
+			if (wParam == 'E')
+				rotateZStatus = 1;
+
+
+			if (wParam == VK_UP) {
+				cameraMoveForward = 1;
+			}
+			else if (wParam == VK_DOWN) {
+				cameraMoveForward = -1;
+			}
+			if (wParam == VK_LEFT)
+			{
+				cameraMoveSide = 1;
+			}
+			else if (wParam == VK_RIGHT) {
+				cameraMoveSide = -1;
+			}
+			if (wParam == VK_PRIOR) {
+				cameraMoveUp = 1;
+			}
+			if (wParam == VK_NEXT) {
+				cameraMoveUp = -1;
+			}
+		}
+		
 		if (wParam == VK_ESCAPE)
 			exit(0);
-			
-		if (wParam == 'A')
-			rotateYStatus = -1;
-		if (wParam == 'D')
-			rotateYStatus = 1;
-		if (wParam == 'W')
-			rotateXStatus =-1;
-		if (wParam == 'S')
-			rotateXStatus = 1;
-		if (wParam == 'Q')
-			rotateZStatus = -1;
-		if (wParam == 'E')
-			rotateZStatus = 1;
+
 		if (wParam == 'M')
 		{
 			cout << "Enter Render Thread Sum:" << endl;
@@ -190,26 +249,6 @@ LRESULT CALLBACK WindowProc(
 			int temp;
 			cin >> temp;
 			drawThreadSum = temp;
-		}
-
-		if (wParam == VK_UP) {
-			cameraMoveForward = 1;
-		}
-		else if (wParam == VK_DOWN) {
-			cameraMoveForward = -1;
-		}
-		if (wParam == VK_LEFT)
-		{
-			cameraMoveSide = 1;
-		}
-		else if (wParam == VK_RIGHT) {
-			cameraMoveSide = -1;
-		}
-		if (wParam == VK_PRIOR) {
-			cameraMoveUp = 1;
-		}
-		if (wParam == VK_NEXT) {
-			cameraMoveUp = -1;
 		}
 			break;
 	}
@@ -229,9 +268,11 @@ LRESULT CALLBACK WindowProc(
 
 int main()
 {
+
 	initWindow();
 
 	setDrawThreadSum(6);
+	//setDrawThreadSum(1);
 
 	Light L;
 	L.color = { 255,255,255 };
@@ -280,7 +321,7 @@ int main()
 	spriteVec.push_back(sBunny);
 	//spriteVec.push_back(sBunny1);
 	//spriteVec.push_back(sCube);
-	spriteVec.push_back(sGround);
+	//spriteVec.push_back(sGround);
 
 	int loadModelId =4;
 	switch (loadModelId)

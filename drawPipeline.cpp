@@ -696,8 +696,14 @@ void DrawScanLine(double x0, double z0, double x1, double z1, double y,
 		swap(z0, z1);
 	}
 
-	for (int x = max(0,x0); x < min(x1,screenWidth); x++) {
-		double nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+	for (int x = max(0,x0); x <= min(x1,screenWidth); x++) {
+		double nowZ;
+		if ((int)x0 == (int)x1) {
+			nowZ = z0;
+		}
+		else {
+			nowZ = z0 + (double)(x - x0) / (double)(x1 - x0) * (z1 - z0);
+		}
 		Color nowColor;
 		const Vec& pOnCamera = getCameraPosFromScreenPoint({ (double)x,y,(double)nowZ }, camera);
 		if (model->drawMode == TextureColorWithLine|| model->drawMode== TextureColor) {
