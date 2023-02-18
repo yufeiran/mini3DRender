@@ -22,7 +22,7 @@ void Camera::update()
 
 void Camera::updateSurroundCameraMode()
 {
-	
+	const Vec offset = { 0,0.1,0 };
 	side = { 1.0,-1.0 / (tan(degToRad(surroundCameraPhi))),0 };
 	eye = { surroundCameraR * sin(degToRad(surroundCameraTheta)) * cos(degToRad(surroundCameraPhi)),
 		surroundCameraR * sin(degToRad(surroundCameraTheta)) * sin(degToRad(surroundCameraPhi)),
@@ -31,5 +31,7 @@ void Camera::updateSurroundCameraMode()
 
 	lookat = { 0,0,0 };
 
+	eye += offset;
+	lookat += offset;
 
 }

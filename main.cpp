@@ -180,9 +180,9 @@ LRESULT CALLBACK WindowProc(
 		{
 
 			if (wParam == 'W')
-				camera.surroundCameraR -= 0.3;
+				camera.surroundCameraR -= 0.05;
 			if (wParam == 'S')
-				camera.surroundCameraR += 0.3;
+				camera.surroundCameraR += 0.05;
 			//if (wParam == 'A')
 			//	camera.surroundCameraPhi -= 1;
 			//if (wParam == 'D')
@@ -274,6 +274,8 @@ int main()
 	setDrawThreadSum(6);
 	//setDrawThreadSum(1);
 
+
+
 	Light L;
 	L.color = { 255,255,255 };
 	L.energy = 30;
@@ -314,14 +316,14 @@ int main()
 
 	Sprite sGround;
 	sGround.model = mGround;
-	sGround.moveVec = { -0.2,0,0 };
-	sGround.scaleX = 0.1;
-	sGround.scaleY = 0.1;
-	sGround.scaleZ= 0.1;
+	sGround.moveVec = { -0.1,0,0 };
+	sGround.scaleX = 0.15;
+	sGround.scaleY = 0.15;
+	sGround.scaleZ= 0.15;
 	spriteVec.push_back(sBunny);
 	//spriteVec.push_back(sBunny1);
 	//spriteVec.push_back(sCube);
-	//spriteVec.push_back(sGround);
+	spriteVec.push_back(sGround);
 
 	int loadModelId =4;
 	switch (loadModelId)

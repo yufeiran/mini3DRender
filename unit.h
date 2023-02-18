@@ -67,6 +67,13 @@ struct Vec
 		return *this;
 
 	}
+	Vec operator+=(const Vec& v) {
+		x += v.x;
+		y += v.y;
+		z += v.z;
+		return *this;
+	}
+
 	Vec operator+(const Vec& v)const {
 		return Vec(x + v.x, y + v.y, z + v.z, w);
 	}

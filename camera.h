@@ -31,8 +31,8 @@ struct Camera
 	CameraMode cameraMode = SurroundCameraMode;
 
 	double surroundCameraTheta = 90;
-	double surroundCameraPhi = 0;
-	double surroundCameraR = 1.5;
+	double surroundCameraPhi = 47;
+	double surroundCameraR = 0.25;
 
 	void update();
 
