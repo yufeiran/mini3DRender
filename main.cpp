@@ -313,6 +313,10 @@ int main()
 	Sprite sCube;
 	sCube.model = mCube;
 	sCube.moveVec = { 0,0,0 };
+	sCube.scaleX = 0.1;
+	sCube.scaleY = 0.1;
+	sCube.scaleZ = 0.1;
+
 
 	Sprite sGround;
 	sGround.model = mGround;

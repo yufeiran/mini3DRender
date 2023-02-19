@@ -15,8 +15,8 @@ struct Camera
 
 	double viewAng = 45;
 	double aspect = 4.0 / 3.0;
-	double n = 2;
-	double f = 300;
+	double n = 0.1;
+	double f = 30;
 
 	double X0 = 0;
 	double Y0 = 0;

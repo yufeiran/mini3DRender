@@ -34,6 +34,7 @@ Mat makeCameraToClipMat(const double viewAng, const double aspect, double n, dou
 	m.m[2][2] = f / (f - n);
 	m.m[2][3] = f * n / (n - f); 
 	m.m[3][2] = 1;
+
 	return m;
 }
 
@@ -113,7 +114,7 @@ Vec transformClipToScreen(const Camera& camera, const Vec& clipVec)
 	Vec ScreenVec = mClipToScreen * clipVec;
 
 	if (debugMode)
-		cout << "screen :" << ScreenVec << endl;
+		cout << "screen :" << ScreenVec << endl <<" - > ";
 	return ScreenVec;
 
 }
@@ -846,7 +847,7 @@ bool checkIsPointInCuboid(const Vec& p)
 {
 	if (p.x < -1.2 || p.x>1.2)return false;
 	if (p.y < -1.2 || p.y>1.2)return false;
-	//if (p.z < 0 || p.z >1)return false;
+	if (p.z < 0 || p.z >1)return false;
 	return true;
 }
 
@@ -856,6 +857,10 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	const double  sx, const double sy, const double sz)
 {
 
+	if (debugMode == true)
+	{
+		cout << "=========================DrawTriangle=========================" << endl << " - > ";
+	}
 	if (vTri.pointIndex[0] - 1 >= model->vList.size())return;
 	if (vTri.pointIndex[1] - 1 >= model->vList.size())return;
 	if (vTri.pointIndex[2] - 1 >= model->vList.size())return;
@@ -875,6 +880,19 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	p0Camera.z = -p0Camera.z;
 	p1Camera.z = -p1Camera.z;
 	p2Camera.z = -p2Camera.z;
+	if (debugMode == true)
+	{
+		cout << "camera Z neg p0:" << p0Camera << endl << " - > ";
+		cout << "camera Z neg p1:" << p0Camera << endl << " - > ";
+		cout << "camera Z neg p2:" << p0Camera << endl << " - > ";
+	}
+
+	if ((p0Camera.z < camera.n )&& 
+		(p1Camera.z < camera.n) && 
+		(p2Camera.z < camera.n)) {
+		return;
+	}
+
 
 	const auto& p0ClipHomogeneousVec = transformCameraToClip(camera, p0Camera);
 	const auto& p1ClipHomogeneousVec = transformCameraToClip(camera, p1Camera);
@@ -889,9 +907,13 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 
 	if (model->isNeedCVVCut == true)
 	{
-		if (checkIsPointInCuboid(p0Clip) == false)return;
-		if (checkIsPointInCuboid(p1Clip) == false)return;
-		if (checkIsPointInCuboid(p2Clip) == false)return;
+		if ((checkIsPointInCuboid(p0Clip) == false) &&
+			(checkIsPointInCuboid(p1Clip) == false) &&
+			(checkIsPointInCuboid(p2Clip) == false)) {
+			return;
+		}
+			
+
 	}
 
 
@@ -899,6 +921,19 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 	const auto& p1Screen = transformClipToScreen(camera, p1Clip);
 	const auto& p2Screen = transformClipToScreen(camera, p2Clip);
 
+	//遮挡剔除
+	//如果三角形的三个顶点的z值都大于屏幕相应点位的z值就剔除
+	double screenZInP0 = getZBufferByPos(p0Screen.x, p0Screen.y);
+	double screenZInP1 = getZBufferByPos(p1Screen.x, p1Screen.y);
+	double screenZInP2 = getZBufferByPos(p2Screen.x, p2Screen.y);
+	const double delta = 0.02;
+	if ((p0Screen.z > (screenZInP0+ delta))&& (p1Screen.z > (screenZInP1+delta ))&&( p2Screen.z > (screenZInP2+ delta))) {
+		return;
+	}
+
+	//if ((p0Screen.z <screenZInP0) && (p1Screen.z < screenZInP1) && (p2Screen.z < screenZInP2)) {
+	//	return;
+	//}
 
 	if (model->drawMode == TextureColorWithLine || model->drawMode == FillColorWithLine || model->drawMode == LineColor)
 	{

@@ -28,6 +28,7 @@ void CleanScreen();
 void PutBufferToScreen();
 
 void DrawPoint(int x, int y,double z, const Color& color = Color(255, 255, 255));
+double getZBufferByPos(int x, int y);
 
 
 void CleanScreen();

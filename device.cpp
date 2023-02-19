@@ -22,7 +22,7 @@ MSG msg;
 int screenWidth=800;
 int screenHeight=600;
 double screenRatio;
-double* ZBuffer;
+double* ZBuffer; //0表示最近 1表示最远
 
 double oneFrameTime;
 
@@ -152,10 +152,11 @@ void SetTitle(const char* title)
 {
 	if (x < 0 || x >= screenWidth)return;
 	if (y < 0 || y >= screenHeight)return;
+	if (z < 0 || z>1)return;
 	
 
 	int pos = y * screenWidth + (x + 1) ;
-	double screenZ = 1 - ZBuffer[pos - 1];
+	double screenZ =  ZBuffer[pos - 1];
 	if (z > screenZ)
 	{
 		return;
@@ -164,7 +165,7 @@ void SetTitle(const char* title)
 	buffer[pos*3 - 1] = color.r;
 	buffer[pos*3 - 2] = color.g;
 	buffer[pos *3- 3] = color.b;
-	ZBuffer[pos - 1] = 1-z;
+	ZBuffer[pos - 1] = z;
 }
 
 
@@ -178,9 +179,25 @@ void CleanScreen()
 		for (int x = 0; x < screenWidth; x++)
 		{
 			double nowPart = 1-(double)y / (double)screenHeight;
+
 			buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 3] =177;
 			buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 2] = 150;
 			buffer[int(y) * screenWidth * 3 + (int(x) + 1) * 3 - 1] = nowPart*147;
+			ZBuffer[int(y) * screenWidth  + int(x)] = 1;
 		}
 	}
+}
+
+
+double getZBufferByPos(int x, int y)
+{
+	if (x < 0 || x >= screenWidth) {
+		return 1;
+	}
+	if (y < 0 || y >= screenHeight) {
+		return 1;
+	}
+	int pos = y * screenWidth + (x + 1);
+	return ZBuffer[pos - 1];
+
 }
