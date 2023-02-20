@@ -33,5 +33,6 @@ void Camera::updateSurroundCameraMode()
 
 	eye += offset;
 	lookat += offset;
+	Forward = lookat - eye;
 
 }

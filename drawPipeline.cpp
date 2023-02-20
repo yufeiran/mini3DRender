@@ -893,6 +893,18 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 		return;
 	}
 
+	//±³ÃæÏûÒþ
+	Vec AB = p1Camera - p0Camera;
+	Vec BC = p2Camera - p1Camera;
+	Vec triNormalVec = cross(AB, BC);
+	const Vec cameraDirection = p0Camera;
+	double backsideBlankingResult = triNormalVec * cameraDirection;
+	const double bias = 0.05;
+	if (backsideBlankingResult < 0- bias) {
+		return;
+	}
+
+
 
 	const auto& p0ClipHomogeneousVec = transformCameraToClip(camera, p0Camera);
 	const auto& p1ClipHomogeneousVec = transformCameraToClip(camera, p1Camera);
@@ -912,8 +924,6 @@ void DrawTriangle(const Triangle& vTri, const Triangle& uvTri, const Triangle& v
 			(checkIsPointInCuboid(p2Clip) == false)) {
 			return;
 		}
-			
-
 	}
 
 
