@@ -26,13 +26,6 @@ double* ZBuffer; //0表示最近 1表示最远
 
 double oneFrameTime;
 
-void PutBufferToScreen()
-{
-	SetDIBits(screen_hdc, hCompatibleBitmap, 0, screenHeight, buffer, (BITMAPINFO*)&binfo, DIB_RGB_COLORS);
-	BitBlt(screen_hdc, -1, -1, screenWidth, screenHeight, hCompatibleDC, 0, 0, SRCCOPY);
-	//SetStretchBltMode(screen_hdc, HALFTONE);
-	//StretchBlt(screen_hdc,0, 0, windowWidth, windowHeight, screen_hdc, 0, 0, picWidth, picHeight, SRCCOPY);
-}
 
 void initWindow()
 {
@@ -95,6 +88,15 @@ void initWindow()
 	hOldBitmap = (HBITMAP)SelectObject(hCompatibleDC, hCompatibleBitmap);
 }
 
+void PutBufferToScreen()
+{
+	SetDIBits(screen_hdc, hCompatibleBitmap, 0, screenHeight, buffer, (BITMAPINFO*)&binfo, DIB_RGB_COLORS);
+	BitBlt(screen_hdc, -1, -1, screenWidth, screenHeight, hCompatibleDC, 0, 0, SRCCOPY);
+	//SetStretchBltMode(screen_hdc, HALFTONE);
+	//StretchBlt(screen_hdc,0, 0, windowWidth, windowHeight, screen_hdc, 0, 0, picWidth, picHeight, SRCCOPY);
+}
+
+
 void updateFrame()
 {
 	if (PeekMessage(&msg, NULL, 0, 0, PM_REMOVE))
@@ -102,7 +104,6 @@ void updateFrame()
 		TranslateMessage(&msg);
 		DispatchMessage(&msg);
 	}
-	GameLoop();
 }
 
 int CalFPS()

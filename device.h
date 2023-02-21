@@ -34,7 +34,7 @@ double getZBufferByPos(int x, int y);
 void CleanScreen();
 
 
-void GameLoop();
+void GameLoopOnce();
 
 
 int CalFPS();

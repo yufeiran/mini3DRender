@@ -1,4 +1,5 @@
 #include<vector>
+#include<thread>
 #include"mini3DRender.h"
 
 
@@ -6,6 +7,7 @@
 using namespace std;
 
 bool debugMode = false;
+bool isGameOver = false;
 //=======================================================
 
 //======================================================
@@ -39,7 +41,7 @@ Vec Cube[8];
 const int randomColorSum = 1000;
 Color randColorList[randomColorSum];
 
-void GameLoop()
+void GameLoopOnce()
 {
 	if (camera.cameraMode == FPSCameraMode)
 	{
@@ -115,6 +117,14 @@ void GameLoop()
 	char titleStr[50];
 	sprintf_s(titleStr, "FPS:%d camera pos (%.2f,%.2f,%.2f)", nowFps,camera.eye.x, camera.eye.y, camera.eye.z);
 	SetTitle(titleStr);
+}
+
+void GameLoop()
+{
+	while (isGameOver == false)
+	{
+		GameLoopOnce();
+	}
 }
 
 
@@ -239,8 +249,9 @@ LRESULT CALLBACK WindowProc(
 			}
 		}
 		
-		if (wParam == VK_ESCAPE)
-			exit(0);
+		if (wParam == VK_ESCAPE) {
+			isGameOver = true;
+		}
 
 		if (wParam == 'M')
 		{
@@ -365,7 +376,9 @@ int main()
 	default:
 		break;
 	}
-	while (1)
+	thread renderThread(GameLoop);
+	renderThread.detach();
+	while (isGameOver==false)
 	{
 		updateFrame();
 	}

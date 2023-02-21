@@ -12,6 +12,7 @@
 
 
 extern bool debugMode;
+extern bool isGameOver;
 
 
 #endif // !MINI3DRENDER_H
