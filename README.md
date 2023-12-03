@@ -11,5 +11,7 @@
   
 
 
-## 实现进度
+## 实现细节
 https://yufeiran.com/mini3drender/
+## 矩阵变换推导
+[草稿纸上推图形学坐标变换](https://yufeiran.com/cao-gao-zhi-shang-tui/)
