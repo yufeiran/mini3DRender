@@ -170,4 +170,8 @@ struct Triangle
 	}
 };
 
+inline double clamp(double x, double min, double max) {
+	return std::max(std::min(x, max), min);
+}
+
 #endif // !UNIT_H

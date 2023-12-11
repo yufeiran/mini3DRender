@@ -10,6 +10,8 @@
 *.userosscache
 *.sln.docstates
 
+
+
 # User-specific files (MonoDevelop/Xamarin Studio)
 *.userprefs
 
@@ -406,3 +408,5 @@ FodyWeavers.xsd
 /model/low_poly_tree/Lowpoly_tree_sample.fbx
 /model/low_poly_tree/Lowpoly_tree_sample.dae
 /model/low_poly_tree/Lowpoly_tree_sample.c4d
+
+!/model/

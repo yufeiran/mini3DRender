@@ -8,7 +8,7 @@
 
 
 struct Texture;
-Texture* loadTexture(const char* filepath);
+Texture* loadTexture(const char* filepath, bool flipTexture = false);
 struct Texture
 {
 	int width, height;

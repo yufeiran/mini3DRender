@@ -175,9 +175,11 @@ Model* loadModel(const char* filepath,const char*name)
 
 
 
-Texture *loadTexture(const char* filepath)
+Texture *loadTexture(const char* filepath, bool flipTexture)
 {
 	Texture *t=new Texture;
+	stbi_set_flip_vertically_on_load(flipTexture);
+
 	t->data = stbi_load(filepath, &t->width, &t->height, &t->channel, 0);
 
 	return t;
@@ -185,13 +187,17 @@ Texture *loadTexture(const char* filepath)
 
 Color Texture::getColor(double u, double v)
 {
-	if (v < 0)v = 0;
-	if (u < 0)u = 0;
-	if (v > 1)v = 1;
-	if (u > 1)u = 1;
+	//if (v < 0)v = 0;
+	//if (u < 0)u = 0;
+	//if (v > 1)v = 1;
+	//if (u > 1)u = 1;
 	//u = 1.0 - u;
 	//v = 1.0 - v;
-	int x = u * (width-1), y = v * (height-1);
+	u = std::max(std::min(u,1.0),0.0);
+	v = std::max(std::min(v,1.0),0.0);
+
+	int x = u * (width-1);
+	int y = v * (height-1);
 	int index = y * width + x;
 	return Color(data[index * channel], data[index * channel + 1], data[index * channel + 2]);
 

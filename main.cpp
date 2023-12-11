@@ -282,14 +282,14 @@ int main()
 
 	initWindow();
 
-	setDrawThreadSum(6);
+	setDrawThreadSum(1);
 	//setDrawThreadSum(1);
 
 
 
 	Light L;
 	L.color = { 255,255,255 };
-	L.energy = 30;
+	L.energy = 10;
 	L.posInWorld = { 10,0,0 };
 	lightVec.push_back(L);
 
@@ -302,17 +302,21 @@ int main()
 	Model* mBunny = loadModel("model/bunny.obj");
 	mBunny->drawMode = FillColor;
 	Model* mCube = loadModel("model/cube.obj");
-	mCube->texture=loadTexture("model/wood.jpg");
+	mCube->texture = loadTexture("model/yuki.jpg", true);
 	mCube->drawMode= TextureColor;
 	Model* mGround = loadModel("model/Ground.obj");
 	mGround->texture = loadTexture("model/green.png");
 	mGround->drawMode = TextureColor;
 	mGround->isNeedCVVCut = false;
 
+	Model* mTriangle = loadModel("model/tri.obj");
+	mTriangle->texture = loadTexture("model/yuki.jpg", true);
+	mTriangle->drawMode = TextureColor;
 
-	modelVec.push_back(mBunny);
+
+	//modelVec.push_back(mBunny);
 	modelVec.push_back(mCube);
-	modelVec.push_back(mGround);
+	//modelVec.push_back(mGround);
 
 	Sprite sBunny;
 	sBunny.model = mBunny;
@@ -323,7 +327,7 @@ int main()
 
 	Sprite sCube;
 	sCube.model = mCube;
-	sCube.moveVec = { 0,0,0 };
+	sCube.moveVec = { 0, 0, 0 };
 	sCube.scaleX = 0.1;
 	sCube.scaleY = 0.1;
 	sCube.scaleZ = 0.1;
@@ -335,12 +339,22 @@ int main()
 	sGround.scaleX = 0.15;
 	sGround.scaleY = 0.15;
 	sGround.scaleZ= 0.15;
-	spriteVec.push_back(sBunny);
-	//spriteVec.push_back(sBunny1);
-	//spriteVec.push_back(sCube);
-	spriteVec.push_back(sGround);
 
-	int loadModelId =4;
+
+	Sprite sTriangle;
+	sTriangle.model = mTriangle;
+	sTriangle.moveVec = { 0, 0, 0 };
+	sTriangle.scaleX = 0.1;
+	sTriangle.scaleY = 0.1;
+	sTriangle.scaleZ = 0.1;
+
+	//spriteVec.push_back(sBunny);
+	//spriteVec.push_back(sBunny1);
+	spriteVec.push_back(sTriangle);
+	//spriteVec.push_back(sCube);
+	//spriteVec.push_back(sGround);
+
+	int loadModelId =1;
 	switch (loadModelId)
 	{
 	case 0:
@@ -352,7 +366,8 @@ int main()
 	case 1:
 		moveVec = { 0,0,0 };
 		model = loadModel("model/cube.obj");
-		model->texture = loadTexture("model/wood.jpg");
+		//model->texture = loadTexture("model/wood.jpg");
+		model->texture = loadTexture("model/wings_of_liberty.png");
 		model->drawMode = TextureColor;
 		break;
 	case 2:

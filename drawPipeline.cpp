@@ -130,9 +130,15 @@ void drawModelSub(int threadID,int threadSum, const Camera& camera, const Model*
 		{
 			uvTri = model->uvIndexList[i];
 		}
+		else {
+			cout<<"uv error"<<endl;
+		}
 		if (i < model->vnIndexList.size())
 		{
 			vnTri = model->vnIndexList[i];
+		}
+		else {
+			cout<<"vn error"<<endl;
 		}
 		DrawTriangle(model->vIndexList[i], uvTri, vnTri,
 			model, camera, moveVec, rotateXAng, rotateYAng, rotateZAng, sx, sy, sz);
@@ -253,12 +259,16 @@ UVPair calUVByCameraPoint(const Vec& pOnCamera, const VPoint& vp1, const VPoint&
 
 	i = i_result_up /
 		i_result_bottom;
+	
+	i = clamp(i, 0, 1);
 
 	double j_result_up = (-(P.x - C.x) * (A.y - C.y) + (P.y - C.y) * (A.x - C.x));
 	double j_result_bottom = ((C.x - B.x) * (A.y - C.y) - (C.y - B.y) * (A.x - C.x));
 
 	j = j_result_up /
 		j_result_bottom;
+
+	j = clamp(j, 0, 1);
 
 	if (j_result_bottom == 0)
 	{
