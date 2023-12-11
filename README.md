@@ -2,6 +2,8 @@
 
 
 ![image](https://github.com/yufeiran/mini3DRender/assets/22091612/b4b6fd92-f03d-44c0-b282-2a3a6be34f50)
+![uvmapping](https://github.com/yufeiran/mini3DRender/assets/22091612/40482ee1-812d-49cf-b1e1-614d16b0e25b)
+
 
 ## :hammer_and_wrench: main feature 主要功能
 * 解析obj模型
